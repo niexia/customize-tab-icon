@@ -1,2 +1,3 @@
-# chrome-customize-tab-icon
-A Chrome extension that allows you to customize website icons (tab icons).
+# WXT + React
+
+This template should help get you started developing with React in WXT.
