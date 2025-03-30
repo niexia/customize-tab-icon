@@ -2,6 +2,7 @@
 export {}
 declare global {
   const ContentScriptContext: typeof import('wxt/client')['ContentScriptContext']
+  const Header: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/header')['Header']
   const InvalidMatchPattern: typeof import('wxt/sandbox')['InvalidMatchPattern']
   const MatchPattern: typeof import('wxt/sandbox')['MatchPattern']
   const MigrationError: typeof import('wxt/storage')['MigrationError']
