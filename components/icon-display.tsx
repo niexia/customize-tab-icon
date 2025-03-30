@@ -1,5 +1,6 @@
-import { Loader } from "./base/loader";
 import { Button } from "./ui/button";
+import { TriangleAlert } from 'lucide-react'
+import { useMemo } from 'react';
 
 type IconDisplayProps = {
   icon: string,
@@ -8,9 +9,17 @@ type IconDisplayProps = {
 
 export function IconDisplay(props: IconDisplayProps) {
   const { icon, onReset } = props
+  const isIconEmpty = useMemo(() => !icon || icon === '#', [icon]);
   return (
-    <section className="flex justify-between p-4">
-      <img src={icon} className="w-9 h-9"></img>
+    <section className="flex justify-between items-center p-4">
+      {
+        isIconEmpty
+          ? <div className="flex items-center gap-2 text-white">
+              <TriangleAlert size={20} className="text-yellow-400" />
+              <span className="font-medium">No icon</span>
+            </div>
+          : <img src={icon} className="w-9 h-9" alt="Website icon" />
+      }
       <Button onClick={onReset}>Reset</Button>
     </section>
   )
