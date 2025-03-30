@@ -1,7 +1,10 @@
 #root {
   max-width: 1280px;
   min-width: 280px;
-  min-height: 500px;
   margin: 0 auto;
-  padding: 1rem;
+  font-size: 1rem;
+}
+
+#root > :not(:last-child) {
+  border-bottom: 1px solid oklch(0.269 0 0);
 }
