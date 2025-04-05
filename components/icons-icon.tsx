@@ -15,13 +15,15 @@ const capitalizeIconName = (iconName: string) => {
   ).join('');
 };
 
-const ICON_META_LIST = Object.entries(iconMetaData);
-const ICON_CATEGORIES = iconCategory.map((category) => ({
-  icons: ICON_META_LIST
-    .filter(([_, categories]) => (categories as string[]).includes(category.name))
-    .map(([iconName]) => capitalizeIconName(iconName)),
-  ...category
-}));
+// const ICON_META_LIST = Object.entries(iconMetaData);
+// const ICON_CATEGORIES = iconCategory.map((category) => ({
+//   icons: ICON_META_LIST
+//     .filter(([_, categories]) => (categories as string[]).includes(category.name))
+//     .map(([iconName]) => capitalizeIconName(iconName)),
+//   ...category
+// }));
+
+const ICON_LIST = Object.keys(iconMetaData).map(capitalizeIconName)
 
 export function IconsIcon() {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -34,17 +36,9 @@ export function IconsIcon() {
   };
 
   const categories = useMemo(() => {
-    if (!searchTerm) return ICON_CATEGORIES;
-    return ICON_CATEGORIES
-      .map(category => ({
-        ...category,
-        icons: category.icons.filter(iconName => 
-          iconName.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      }))
-      .filter(category => category.icons.length > 0);
+    if (!searchTerm) return ICON_LIST;
+    return ICON_LIST.filter(iconName => (iconName.toLowerCase().includes(searchTerm.toLowerCase())))
   }, [searchTerm]);
-
 
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -64,26 +58,21 @@ export function IconsIcon() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <ScrollArea className="h-[300px]">
-          {categories.map(({title, icons}) => (
-            <div key={title} className="mb-6">
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">{title}</h4>
-              <div className="grid grid-cols-8 gap-2">
-                {icons.map((iconName) => {
-                  const IconComponent = (Icons as any)[iconName];
-                  return IconComponent && (
-                    <span 
-                      key={iconName}
-                      className="p-1 hover:rounded-full hover:bg-accent hover:cursor-pointer"
-                      onClick={() => handleIconSelect(iconName)}
-                    >
-                      <IconComponent size={20} />
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        <ScrollArea className="h-[280px]">
+          <div className="grid grid-cols-8 gap-2">
+            {categories.map((iconName) => {
+              const IconComponent = (Icons as any)[iconName];
+              return IconComponent && (
+                <span 
+                  key={iconName}
+                  className="p-1 hover:rounded-full hover:bg-accent hover:cursor-pointer"
+                  onClick={() => handleIconSelect(iconName)}
+                >
+                  <IconComponent size={20} />
+                </span>
+              )
+            })}
+          </div>
         </ScrollArea>
       </PopoverContent>
     </Popover>
