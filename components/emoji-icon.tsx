@@ -24,7 +24,7 @@ export function EmojiIcon() {
       ctx.font = '48px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(emoji, 32, 32);
+      ctx.fillText(emoji.native, 32, 32);
       const emojiDataUrl = canvas.toDataURL();
       
       // 发送消息更新图标
