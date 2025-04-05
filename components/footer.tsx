@@ -6,7 +6,7 @@ export function Footer() {
     <section className="px-2 pt-2 pb-4">
       <ActionItem>
         <Twitter size={20} />
-        <span className="font-medium">Changelog</span>
+        <span className="font-medium">X</span>
       </ActionItem>
     </section>
   )

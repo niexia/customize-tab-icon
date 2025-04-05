@@ -16,7 +16,7 @@ export function IconDisplay(props: IconDisplayProps) {
         isIconEmpty
           ? <div className="flex items-center gap-2 text-white">
               <TriangleAlert size={20} className="text-yellow-400" />
-              <span className="font-medium">No icon</span>
+              <span className="font-medium">Open your link</span>
             </div>
           : <img src={icon} className="w-9 h-9" alt="Website icon" />
       }
