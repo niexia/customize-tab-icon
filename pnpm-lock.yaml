@@ -1,7 +1,10 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@emoji-mart/data': ^1.2.1
+  '@emoji-mart/react': ^1.1.1
   '@radix-ui/react-dropdown-menu': ^2.1.6
+  '@radix-ui/react-popover': ^1.1.6
   '@radix-ui/react-slot': ^1.1.2
   '@tailwindcss/vite': ^4.0.17
   '@types/chrome': ^0.0.280
@@ -11,6 +14,7 @@ specifiers:
   '@wxt-dev/module-react': ^1.1.2
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
+  emoji-mart: ^5.6.0
   lucide-react: ^0.483.0
   react: ^19.0.0
   react-dom: ^19.0.0
@@ -21,11 +25,15 @@ specifiers:
   wxt: ^0.19.29
 
 dependencies:
+  '@emoji-mart/data': 1.2.1
+  '@emoji-mart/react': 1.1.1_emoji-mart@5.6.0+react@19.1.0
   '@radix-ui/react-dropdown-menu': 2.1.6_e43f80978a697c399d731354095c6faa
+  '@radix-ui/react-popover': 1.1.6_e43f80978a697c399d731354095c6faa
   '@radix-ui/react-slot': 1.1.2_00ee55f967e528194bbbb75d754d2464
   '@webext-core/messaging': 2.2.0
   class-variance-authority: 0.7.1
   clsx: 2.1.1
+  emoji-mart: 5.6.0
   lucide-react: 0.483.0_react@19.1.0
   react: 19.1.0
   react-dom: 19.1.0_react@19.1.0
@@ -278,6 +286,20 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@emoji-mart/data/1.2.1:
+    resolution: {integrity: sha512-no2pQMWiBy6gpBEiqGeU77/bFejDqUTRY7KX+0+iur13op3bqUsXdnwoZs6Xb1zbv0gAj5VvS1PWoUUckSr5Dw==}
+    dev: false
+
+  /@emoji-mart/react/1.1.1_emoji-mart@5.6.0+react@19.1.0:
+    resolution: {integrity: sha512-NMlFNeWgv1//uPsvLxvGQoIerPuVdXwK/EUek8OOkJ6wVOWPUizRBJU0hDqWZCOROVpfBgCemaC3m6jDOXi03g==}
+    peerDependencies:
+      emoji-mart: ^5.2
+      react: ^16.8 || ^17 || ^18
+    dependencies:
+      emoji-mart: 5.6.0
+      react: 19.1.0
+    dev: false
 
   /@esbuild/aix-ppc64/0.25.1:
     resolution: {integrity: sha512-kfYGy8IdzTGy+z0vFGvExZtxkFlA4zAxgKEahG9KE1ScBjpQnFsNOX8KTU5ojNru5ed5CVoJYXFtoxaq5nFbjQ==}
@@ -823,6 +845,40 @@ packages:
       '@radix-ui/react-roving-focus': 1.1.2_e43f80978a697c399d731354095c6faa
       '@radix-ui/react-slot': 1.1.2_00ee55f967e528194bbbb75d754d2464
       '@radix-ui/react-use-callback-ref': 1.1.0_00ee55f967e528194bbbb75d754d2464
+      '@types/react': 19.0.12
+      '@types/react-dom': 19.0.4_@types+react@19.0.12
+      aria-hidden: 1.2.4
+      react: 19.1.0
+      react-dom: 19.1.0_react@19.1.0
+      react-remove-scroll: 2.6.3_00ee55f967e528194bbbb75d754d2464
+    dev: false
+
+  /@radix-ui/react-popover/1.1.6_e43f80978a697c399d731354095c6faa:
+    resolution: {integrity: sha512-NQouW0x4/GnkFJ/pRqsIS3rM/k97VzKnVb2jB7Gq7VEGPy5g7uNV1ykySFt7eWSp3i2uSGFwaJcvIRJBAHmmFg==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@radix-ui/primitive': 1.1.1
+      '@radix-ui/react-compose-refs': 1.1.1_00ee55f967e528194bbbb75d754d2464
+      '@radix-ui/react-context': 1.1.1_00ee55f967e528194bbbb75d754d2464
+      '@radix-ui/react-dismissable-layer': 1.1.5_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-focus-guards': 1.1.1_00ee55f967e528194bbbb75d754d2464
+      '@radix-ui/react-focus-scope': 1.1.2_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-id': 1.1.0_00ee55f967e528194bbbb75d754d2464
+      '@radix-ui/react-popper': 1.2.2_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-portal': 1.1.4_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-presence': 1.1.2_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-primitive': 2.0.2_e43f80978a697c399d731354095c6faa
+      '@radix-ui/react-slot': 1.1.2_00ee55f967e528194bbbb75d754d2464
+      '@radix-ui/react-use-controllable-state': 1.1.0_00ee55f967e528194bbbb75d754d2464
       '@types/react': 19.0.12
       '@types/react-dom': 19.0.4_@types+react@19.0.12
       aria-hidden: 1.2.4
@@ -2216,6 +2272,10 @@ packages:
   /electron-to-chromium/1.5.128:
     resolution: {integrity: sha512-bo1A4HH/NS522Ws0QNFIzyPcyUUNV/yyy70Ho1xqfGYzPUme2F/xr4tlEOuM6/A538U1vDA7a4XfCd1CKRegKQ==}
     dev: true
+
+  /emoji-mart/5.6.0:
+    resolution: {integrity: sha512-eJp3QRe79pjwa+duv+n7+5YsNhRcMl812EcFVwrnRvYKoNPoQb5qxU8DG6Bgwji0akHdp6D4Ln6tYLG58MFSow==}
+    dev: false
 
   /emoji-regex/10.4.0:
     resolution: {integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==}
