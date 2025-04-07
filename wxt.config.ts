@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   extensionApi: 'chrome',
   modules: ['@wxt-dev/module-react'],
+  manifest: {
+    permissions: ['storage']
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),

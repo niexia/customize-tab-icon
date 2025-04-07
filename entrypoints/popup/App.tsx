@@ -49,7 +49,7 @@ function App() {
   };
 
   return (
-    <ThemeProvider defaultTheme='dark' storageKey='changicon-theme'>
+    <ThemeProvider defaultTheme='dark'>
       <Header />
       <IconDisplay icon={icon} onReset={handleReset}></IconDisplay>
       <SettingIcon></SettingIcon>

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react"
+import { changiconTheme } from "@/lib/store"
 
 type Theme = "dark" | "light" | "system"
 
 type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: Theme
-  storageKey?: string
 }
 
 type ThemeProviderState = {
@@ -23,12 +23,19 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
+
+  useEffect(() => {
+    const loadTheme = async () => {
+      const savedTheme = await changiconTheme.getValue()
+      if (savedTheme) {
+        setTheme(savedTheme as Theme)
+      }
+    }
+    loadTheme()
+  }, [])
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -51,7 +58,7 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
+      changiconTheme.setValue(theme)
       setTheme(theme)
     },
   }
