@@ -29,7 +29,7 @@ export function TextIcon() {
           <span className="font-medium">text</span>
         </ActionItem>
       </PopoverTrigger>
-      <PopoverContent className="min-w-80 space-y-4" sideOffset={0} align="start" alignOffset={0}>
+      <PopoverContent className="space-y-4">
         <Input
           placeholder="Enter text..."
           value={inputValue}

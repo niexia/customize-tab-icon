@@ -6,6 +6,7 @@ import Picker from "@emoji-mart/react"
 import data from "@emoji-mart/data"
 import { useState } from "react";
 import { usePopupHeight } from "@/hooks/usePopupHeight";
+import styles from "./emoji-icon.module.css";
 
 export function EmojiIcon() {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -43,19 +44,16 @@ export function EmojiIcon() {
           <span className="font-medium">Emoji</span>
         </ActionItem>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-full p-0" 
-        sideOffset={0}
-        align="start"
-        alignOffset={0}
-      >
-        <Picker 
-          data={data} 
-          previewPosition="none" 
-          onEmojiSelect={handleEmojiSelect}
-          emojiButtonSize={32}
-          perLine={9}
-        />
+      <PopoverContent className="p-0">
+        <div className={styles.emojiPickerWrapper}>
+          <Picker
+            data={data} 
+            previewPosition="none" 
+            onEmojiSelect={handleEmojiSelect}
+            emojiButtonSize={32}
+            perLine={9}
+          />
+        </div>
       </PopoverContent>
     </Popover>
   )

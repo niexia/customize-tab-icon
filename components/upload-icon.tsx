@@ -30,13 +30,10 @@ export function UploadIcon() {
         <span className="font-medium">Upload</span>
       </ActionItem>
       </PopoverTrigger>
-      <PopoverContent className="min-w-80 space-y-4" sideOffset={0} align="start" alignOffset={0}>
+      <PopoverContent className="space-y-4">
         <div className="grid w-full lg:max-w-sm items-center gap-1.5">
-          <Label htmlFor="picture">Select a picture</Label>
-          <Input
-            id="picture"
-            type="file"
-          />
+          <Label htmlFor="picture">Picture</Label>
+          <Input id="picture" type="file" />
         </div>
         <Button className="w-full" onClick={handleSubmit}>
           Confirm

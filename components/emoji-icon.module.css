@@ -1,0 +1,8 @@
+.emojiPickerWrapper {
+  width: auto;
+}
+
+:global(em-emoji-picker) {
+  max-height: 354px;
+  width: 288px;
+} 

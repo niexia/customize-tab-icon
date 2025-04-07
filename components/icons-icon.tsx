@@ -48,7 +48,7 @@ export function IconsIcon() {
           <span className="font-medium">Icons</span>
         </ActionItem>
       </PopoverTrigger>
-      <PopoverContent className="min-w-80" sideOffset={0} align="start" alignOffset={0}>
+      <PopoverContent>
         <div className="relative mb-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
