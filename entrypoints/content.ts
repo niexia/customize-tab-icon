@@ -4,9 +4,6 @@ import { sendMessage, onMessage } from "@/lib/messaging";
 export default defineContentScript({
   matches: ['*://*/*'],
   main() {
-    console.log('Content script running');
-    console.log('content 时间：', Date.now())
-    
     // 不要立即发送图标，而是等待popup请求
     onMessage('requestWebsiteIcon', () => {
       console.log('Received request for website icon');
@@ -20,6 +17,7 @@ export default defineContentScript({
     // 监听来自弹出窗口的消息，用于设置新图标
     onMessage('setWebsiteIcon', (message) => {
       console.log('Received new icon to set:', message.data);
+      
       return setWebsiteIcon(message.data);
     });
   },

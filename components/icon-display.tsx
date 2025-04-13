@@ -9,7 +9,7 @@ type IconDisplayProps = {
 
 export function IconDisplay(props: IconDisplayProps) {
   const { icon, onReset } = props
-  const isIconEmpty = useMemo(() => !icon || icon === '#', [icon]);
+  const isIconEmpty = useMemo(() => !icon, [icon]);
   return (
     <section className="flex justify-between items-center p-4">
       {

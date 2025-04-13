@@ -1,13 +1,14 @@
 import { FileIcon, Search } from "lucide-react";
 import { ActionItem } from "./action-item";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { usePopupHeight } from "@/hooks/usePopupHeight";
 import { Input } from "./ui/input";
 import * as Icons from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import iconMetaData from "@/public/data/iconMetaData";
 import iconCategory from "@/public/data/iconCategory";
+import { generateSvgDataUrl } from "@/lib/utils";
 
 const capitalizeIconName = (iconName: string) => {
   return iconName.split('-').map(part => 
@@ -25,13 +26,22 @@ const capitalizeIconName = (iconName: string) => {
 
 const ICON_LIST = Object.keys(iconMetaData).map(capitalizeIconName)
 
-export function IconsIcon() {
+interface IconsIconProps {
+  onIconChange: (icon?: string) => void;
+}
+
+export function IconsIcon({ onIconChange }: IconsIconProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   
   usePopupHeight(popoverOpen, '600px');
   
-  const handleIconSelect = (iconName: string) => {
+  const handleIconSelect = (event: React.MouseEvent<HTMLSpanElement>) => {
+    const svgElement = event.currentTarget.querySelector('svg');
+    if (!svgElement) return;
+
+    const svgDataUrl = generateSvgDataUrl(svgElement);
+    onIconChange(svgDataUrl);
     setPopoverOpen(false);
   };
 
@@ -66,7 +76,7 @@ export function IconsIcon() {
                 <span 
                   key={iconName}
                   className="p-1 hover:rounded-full hover:bg-accent hover:cursor-pointer"
-                  onClick={() => handleIconSelect(iconName)}
+                  onClick={handleIconSelect}
                 >
                   <IconComponent size={20} />
                 </span>

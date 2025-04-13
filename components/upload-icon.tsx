@@ -3,37 +3,51 @@ import { ActionItem } from "./action-item";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
+import { resizeImageToDataUrl } from "@/lib/utils";
 
-export function UploadIcon() {
+interface UploadIconProps {
+  onIconChange: (icon?: string) => void;
+}
+
+export function UploadIcon({ onIconChange }: UploadIconProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = () => {
-    if (!inputValue?.trim()) {
+  const handleSubmit = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
       return;
     }
-    console.log("Submitted text:", inputValue);
-    setOpen(false);
+
+    try {
+      const resizedDataUrl = await resizeImageToDataUrl(file);
+      onIconChange(resizedDataUrl);
+      setOpen(false);
+    } catch (error) {
+      console.error('Error processing image:', error);
+    }
   };
 
   useEffect(() => {
-    setInputValue("");
-  }, [open])
+    if (!open && fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="w-full">
         <ActionItem>
-        <Image size={20}  />
-        <span className="font-medium">Upload</span>
-      </ActionItem>
+          <Image size={20} />
+          <span className="font-medium">Upload</span>
+        </ActionItem>
       </PopoverTrigger>
       <PopoverContent className="space-y-4">
         <div className="grid w-full lg:max-w-sm items-center gap-1.5">
           <Label htmlFor="picture">Picture</Label>
-          <Input id="picture" type="file" />
+          <Input id="picture" type="file" ref={fileInputRef} accept="image/*" />
         </div>
         <Button className="w-full" onClick={handleSubmit}>
           Confirm

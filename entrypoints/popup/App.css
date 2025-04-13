@@ -4,5 +4,5 @@
 }
 
 #root > :not(:last-child) {
-  border-bottom: 1px solid oklch(0.269 0 0);
+  border-bottom: 1px solid var(--accent);
 }

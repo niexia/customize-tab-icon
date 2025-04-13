@@ -3,9 +3,14 @@ import { ActionItem } from "./action-item";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { generateTextDataUrl } from "@/lib/utils";
 
-export function TextIcon() {
+interface TextIconProps {
+  onIconChange: (icon?: string) => void;
+}
+
+export function TextIcon({ onIconChange }: TextIconProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
@@ -13,7 +18,9 @@ export function TextIcon() {
     if (!inputValue?.trim()) {
       return;
     }
-    console.log("Submitted text:", inputValue);
+
+    const textDataUrl = generateTextDataUrl(inputValue);
+    onIconChange(textDataUrl);
     setOpen(false);
   };
 
@@ -34,6 +41,7 @@ export function TextIcon() {
           placeholder="Enter text..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          maxLength={2}
         />
         <Button className="w-full" onClick={handleSubmit}>
           Confirm

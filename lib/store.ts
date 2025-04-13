@@ -1,3 +1,5 @@
+import { storage } from 'wxt/storage'
+
 const changiconTheme = storage.defineItem<string>(
   'local:changicon-theme',
   {
@@ -5,6 +7,25 @@ const changiconTheme = storage.defineItem<string>(
   }
 );
 
+interface IconInfo {
+  pageHost: string;
+  defaultIcon: string;
+  customIcon?: string;
+}
+
+const changiconLocal = storage.defineItem<Record<string, IconInfo>>(
+  'local:changicon-local',
+  {
+    fallback: {}
+  }
+)
+
+const changeiconSync = storage.defineItem<object>(
+  'sync:changeicon-sync'
+)
+
 export {
-  changiconTheme
+  changiconTheme,
+  changiconLocal,
+  changeiconSync,
 }

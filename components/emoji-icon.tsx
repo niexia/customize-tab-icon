@@ -1,14 +1,18 @@
 import { Smile } from "lucide-react";
 import { ActionItem } from "./action-item";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { sendMessage } from "@/lib/messaging";
 import Picker from "@emoji-mart/react"
 import data from "@emoji-mart/data"
 import { useState } from "react";
 import { usePopupHeight } from "@/hooks/usePopupHeight";
 import styles from "./emoji-icon.module.css";
+import { generateEmojiDataUrl } from "@/lib/utils";
 
-export function EmojiIcon() {
+interface EmojiIconProps {
+  onIconChange: (icon?: string) => void;
+}
+
+export function EmojiIcon({ onIconChange }: EmojiIconProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   
   // 使用自定义hook来管理popup高度
@@ -16,24 +20,9 @@ export function EmojiIcon() {
   
   const handleEmojiSelect = (emoji: any) => {
     console.log('Selected emoji:', emoji.native);
-    // 创建emoji的data URL
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.font = '48px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(emoji.native, 32, 32);
-      const emojiDataUrl = canvas.toDataURL();
-      
-      // 发送消息更新图标
-      sendMessage('setWebsiteIcon', emojiDataUrl);
-      
-      // 选择后自动关闭popover
-      setPopoverOpen(false);
-    }
+    const emojiDataUrl = generateEmojiDataUrl(emoji.native);
+    onIconChange(emojiDataUrl);
+    setPopoverOpen(false);
   };
   
   return (
