@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
-import { resizeImageToDataUrl } from "@/lib/utils";
+import { log, resizeImageToDataUrl } from "@/lib/utils";
 
 interface UploadIconProps {
   onIconChange: (icon?: string) => void;
@@ -26,7 +26,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
       onIconChange(resizedDataUrl);
       setOpen(false);
     } catch (error) {
-      console.error('Error processing image:', error);
+      log('error', 'Error processing image:', error);
     }
   };
 

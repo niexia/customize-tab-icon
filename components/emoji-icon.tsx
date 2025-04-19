@@ -19,7 +19,6 @@ export function EmojiIcon({ onIconChange }: EmojiIconProps) {
   usePopupHeight(popoverOpen, '600px');
   
   const handleEmojiSelect = (emoji: any) => {
-    console.log('Selected emoji:', emoji.native);
     const emojiDataUrl = generateEmojiDataUrl(emoji.native);
     onIconChange(emojiDataUrl);
     setPopoverOpen(false);

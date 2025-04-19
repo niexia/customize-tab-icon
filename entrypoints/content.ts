@@ -16,8 +16,6 @@ export default defineContentScript({
     setIcon();
 
     onMessage('setWebsiteIcon', (message) => {
-      console.log('Received new icon to set:', message.data);
-      
       return setWebsiteIcon(message.data);
     });
   },
