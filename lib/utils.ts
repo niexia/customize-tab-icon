@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function log(type: 'log'|'warn'|'error', msg: string, ...args: any[]) {
+  console[type](`[Changicon] ${msg}`, ...args)
+}
+
 /**
  * 获取当前网页的图标URL
  * 会按照以下顺序尝试获取:

@@ -6,102 +6,85 @@ import { IconDisplay } from '@/components/icon-display';
 import { SettingIcon } from '@/components/setting-icon';
 import { AboutProduct } from '@/components/about-product';
 import { Footer } from '@/components/footer';
-import { onMessage, sendMessage } from '@/lib/messaging';
+import { sendMessage } from '@/lib/messaging';
 import { changiconLocal } from '@/lib/store';
+import { log } from '@/lib/utils';
 
 function App() {
   const [icon, setIcon] = useState('');
   const [tab, setTab] = useState({} as chrome.tabs.Tab);
+  const [parsedUrl, setParsedUrl] = useState({} as URL)
 
   useEffect(() => {
-    const startRequest = async () => {
-      try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        console.log('Current tab:', tab);
-
-        if (!tab?.id || !tab.url) {
-          console.log('No active tab found or invalid URL');
-          return;
-        }
-
-        const {host, pathname} = new URL(tab.url);
-        const storedIcons = await changiconLocal.getValue();
-        const storeIcon = storedIcons[host]?.[pathname];
-        if (storeIcon) {
-          setIcon(storeIcon.customIcon);
-        } else {
-          await sendMessage('requestWebsiteIcon', undefined, tab.id);
-        }
-        setTab(tab);
-      } catch (err) {
-        console.error('Failed to request website icon:', err);
+    const getTabIcon = async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id || !tab.url) {
+        log('log', 'No active tab found or invalid URL');
+        return;
+      }
+      setTab(tab);
+      setParsedUrl(new URL(tab.url))
+      const { host, pathname } = parsedUrl;
+      const storedIcons = await changiconLocal.getValue();
+      const storeIcon = storedIcons[host]?.[pathname];
+      if (storeIcon) {
+        setIcon(storeIcon.customIcon);
       }
     }
-    startRequest();
-
-    const removeListener = onMessage('getWebsiteIcon', async message => {
-      console.log('Received website icon:', message.data);
-      setIcon(message.data);
-    });
-
-    return () => removeListener();
+    getTabIcon();
   }, []);
 
   const changeIcon = async (val?: string) => {
     if (!val || !tab?.id || !tab.url) {
-      console.log('No valid icon to set or invalid tab');
+      log('log', 'No valid icon to set or invalid tab');
       return;
     }
 
-    const host = new URL(tab.url).host;
-    const pathname = new URL(tab.url).pathname;
-    const storedIcons = await changiconLocal.getValue();
-    
-    // 更新存储的图标信息
-    await changiconLocal.setValue({
-      ...storedIcons,
-      [host]: {
-        ...storedIcons[host] || {},
-        [pathname]: {
-          customIcon: val
-        }
-      }
-    });
-
     try {
+      const { host, pathname } = parsedUrl;
+      const storedIcons = await changiconLocal.getValue();
+
+      await changiconLocal.setValue({
+        ...storedIcons,
+        [host]: {
+          ...storedIcons[host],
+          [pathname]: {
+            customIcon: val
+          }
+        }
+      });
+
       await sendMessage('setWebsiteIcon', val, tab.id);
       setIcon(val);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      log('error', 'Failed to update icon:', error);
     }
   };
 
   const resetIcon = async () => {
     if (!tab?.id || !tab.url) {
-      console.log('No valid tab to reset icon');
+      log('log', 'No valid tab to reset icon');
       return;
     }
 
-    const host = new URL(tab.url).host;
-    const pathname = new URL(tab.url).pathname;
-    const storedIcons = await changiconLocal.getValue();
-    
-    // 移除自定义图标
-    await changiconLocal.setValue({
-      ...storedIcons,
-      [host]: {
-        ...storedIcons[host] || {},
-        [pathname]: {
-          customIcon: ''
-        }
-      }
-    });
-
     try {
-      await sendMessage('setWebsiteIcon', tab.favIconUrl ?? '', tab.id);
+      const { host, pathname } = parsedUrl;
+      const storedIcons = await changiconLocal.getValue();
+      
+      await changiconLocal.setValue({
+        ...storedIcons,
+        [host]: {
+          ...storedIcons[host],
+          [pathname]: {
+            customIcon: ''
+          }
+        }
+      });
+      
+      await chrome.tabs.reload(tab.id);
       setIcon(tab.favIconUrl ?? '');
     } catch (error) {
-      console.error('Failed to send message:', error);
+      log('error', 'Failed to reset icon:', error);
     }
   };
 
