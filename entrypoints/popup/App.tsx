@@ -24,28 +24,15 @@ function App() {
           return;
         }
 
-        const host = new URL(tab.url).host;
+        const {host, pathname} = new URL(tab.url);
         const storedIcons = await changiconLocal.getValue();
-        const storedIcon = storedIcons[host];
-        
-        // 如果有存储的自定义图标，使用它
-        if (storedIcon?.customIcon) {
-          setIcon(storedIcon.customIcon);
+        const storeIcon = storedIcons[host]?.[pathname];
+        if (storeIcon) {
+          setIcon(storeIcon.customIcon);
         } else {
-          // 否则使用默认图标
-          setIcon(tab.favIconUrl ?? '');
-          // 存储默认图标信息
-          await changiconLocal.setValue({
-            ...storedIcons,
-            [host]: {
-              pageHost: host,
-              defaultIcon: tab.favIconUrl ?? '',
-            }
-          });
+          await sendMessage('requestWebsiteIcon', undefined, tab.id);
         }
-
         setTab(tab);
-        await sendMessage('requestWebsiteIcon', undefined, tab.id);
       } catch (err) {
         console.error('Failed to request website icon:', err);
       }
@@ -54,20 +41,6 @@ function App() {
 
     const removeListener = onMessage('getWebsiteIcon', async message => {
       console.log('Received website icon:', message.data);
-      if (!tab.url) return;
-
-      const host = new URL(tab.url).host;
-      const storedIcons = await changiconLocal.getValue();
-      
-      // 更新存储的图标信息
-      await changiconLocal.setValue({
-        ...storedIcons,
-        [host]: {
-          ...storedIcons[host],
-          customIcon: message.data
-        }
-      });
-      
       setIcon(message.data);
     });
 
@@ -75,51 +48,60 @@ function App() {
   }, []);
 
   const changeIcon = async (val?: string) => {
-    if (!val || !tab.url) {
-      console.log('No valid icon to reset to or invalid URL');
+    if (!val || !tab?.id || !tab.url) {
+      console.log('No valid icon to set or invalid tab');
       return;
     }
 
     const host = new URL(tab.url).host;
+    const pathname = new URL(tab.url).pathname;
     const storedIcons = await changiconLocal.getValue();
     
     // 更新存储的图标信息
     await changiconLocal.setValue({
       ...storedIcons,
       [host]: {
-        ...storedIcons[host],
-        customIcon: val
+        ...storedIcons[host] || {},
+        [pathname]: {
+          customIcon: val
+        }
       }
     });
 
-    console.log('Sending command to change icon:', val);
-    sendMessage('setWebsiteIcon', val);
-    setIcon(val);
+    try {
+      await sendMessage('setWebsiteIcon', val, tab.id);
+      setIcon(val);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
 
   const resetIcon = async () => {
-    if (!tab.url) {
-      console.log('Invalid URL');
+    if (!tab?.id || !tab.url) {
+      console.log('No valid tab to reset icon');
       return;
     }
 
     const host = new URL(tab.url).host;
+    const pathname = new URL(tab.url).pathname;
     const storedIcons = await changiconLocal.getValue();
-    const defaultIcon = storedIcons[host]?.defaultIcon;
-
-    if (defaultIcon) {
-      // 移除自定义图标
-      await changiconLocal.setValue({
-        ...storedIcons,
-        [host]: {
-          pageHost: host,
-          defaultIcon
+    
+    // 移除自定义图标
+    await changiconLocal.setValue({
+      ...storedIcons,
+      [host]: {
+        ...storedIcons[host] || {},
+        [pathname]: {
+          customIcon: ''
         }
-      });
+      }
+    });
 
-      console.log('Resetting to default icon:', defaultIcon);
-      sendMessage('setWebsiteIcon', defaultIcon);
-      setIcon(defaultIcon);
+    try {
+      await sendMessage('setWebsiteIcon', tab.favIconUrl ?? '', tab.id);
+      setIcon(tab.favIconUrl ?? '');
+    } catch (error) {
+      console.error('Failed to send message:', error);
     }
   };
 

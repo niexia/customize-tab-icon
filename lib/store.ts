@@ -8,19 +8,19 @@ const changiconTheme = storage.defineItem<string>(
 );
 
 interface IconInfo {
-  pageHost: string;
-  defaultIcon: string;
-  customIcon?: string;
+  customIcon: string
 }
 
-const changiconLocal = storage.defineItem<Record<string, IconInfo>>(
+type HostIcons = Record<string, Record<string, IconInfo>>
+
+const changiconLocal = storage.defineItem<HostIcons>(
   'local:changicon-local',
   {
     fallback: {}
   }
 )
 
-const changeiconSync = storage.defineItem<object>(
+const changeiconSync = storage.defineItem<HostIcons>(
   'sync:changeicon-sync'
 )
 
