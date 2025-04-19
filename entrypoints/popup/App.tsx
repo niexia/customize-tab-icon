@@ -93,7 +93,7 @@ function App() {
       <Header />
       <IconDisplay icon={icon} onReset={resetIcon}></IconDisplay>
       <SettingIcon onIconChange={changeIcon}></SettingIcon>
-      <AboutProduct></AboutProduct>
+      {/* <AboutProduct></AboutProduct> */}
       <Footer></Footer>
     </ThemeProvider>
   );

@@ -9,7 +9,7 @@ interface SettingIconProps {
 
 export function SettingIcon({ onIconChange }: SettingIconProps) {
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col p-2">
       <EmojiIcon onIconChange={onIconChange}></EmojiIcon>
       <IconsIcon onIconChange={onIconChange}></IconsIcon>
       <TextIcon onIconChange={onIconChange}></TextIcon>
