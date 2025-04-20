@@ -14,19 +14,19 @@ const SOCIAL_LINKS: SocialLink[] = [
     label: 'X'
   },
   {
-    url: 'https://github.com/niexia',
+    url: 'https://github.com/niexia/customize-tab-icon',
     icon: <Github size={20} />,
     label: 'GitHub'
   }
 ];
 
-export function Footer() {
+export function Contact() {
   const handleOpenUrl = (url: string) => {
     chrome.tabs.create({ url });
   };
 
   return (
-    <section className="px-2 pt-2 pb-4 flex gap-1">
+    <section className="px-2 pt-2 pb-4 flex">
       {SOCIAL_LINKS.map(({ url, icon, label }) => (
         <Button
           key={url}

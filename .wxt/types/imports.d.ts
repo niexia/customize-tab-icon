@@ -3,9 +3,9 @@ export {}
 declare global {
   const AboutProduct: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/about-product')['AboutProduct']
   const ActionItem: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/action-item')['ActionItem']
+  const Contact: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/contact')['Contact']
   const ContentScriptContext: typeof import('wxt/client')['ContentScriptContext']
   const EmojiIcon: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/emoji-icon')['EmojiIcon']
-  const Footer: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/footer')['Footer']
   const Header: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/header')['Header']
   const IconDisplay: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/icon-display')['IconDisplay']
   const IconsIcon: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/icons-icon')['IconsIcon']
