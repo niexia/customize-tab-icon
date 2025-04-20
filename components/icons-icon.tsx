@@ -1,4 +1,4 @@
-import { FileIcon, Search } from "lucide-react";
+import { Search, Target } from "lucide-react";
 import { ActionItem } from "./action-item";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useState, useMemo } from "react";
@@ -54,15 +54,15 @@ export function IconsIcon({ onIconChange }: IconsIconProps) {
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger className="w-full">
         <ActionItem>
-          <FileIcon size={20} />
-          <span className="font-medium">Icons</span>
+          <Target size={20} />
+          <span className="font-medium">Icon</span>
         </ActionItem>
       </PopoverTrigger>
       <PopoverContent>
         <div className="relative mb-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search icons..."
+            placeholder="Search icon..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
