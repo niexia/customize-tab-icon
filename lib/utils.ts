@@ -61,6 +61,33 @@ const DEFAULT_CONFIG: IconConfig = {
 };
 
 /**
+ * 在画布上绘制白色背景
+ */
+function drawWhiteBackground(ctx: CanvasRenderingContext2D, size: number) {
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size, size);
+}
+
+/**
+ * 在画布上创建圆角矩形路径并应用裁剪
+ */
+function applyRoundedRectClip(ctx: CanvasRenderingContext2D, size: number) {
+  const radius = size / 4;
+  ctx.beginPath();
+  ctx.moveTo(radius, 0);
+  ctx.lineTo(size - radius, 0);
+  ctx.quadraticCurveTo(size, 0, size, radius);
+  ctx.lineTo(size, size - radius);
+  ctx.quadraticCurveTo(size, size, size - radius, size);
+  ctx.lineTo(radius, size);
+  ctx.quadraticCurveTo(0, size, 0, size - radius);
+  ctx.lineTo(0, radius);
+  ctx.quadraticCurveTo(0, 0, radius, 0);
+  ctx.closePath();
+  ctx.clip();
+}
+
+/**
  * 生成 emoji 图标的 data URL
  */
 export function generateEmojiDataUrl(emoji: string, config: IconConfig = DEFAULT_CONFIG) {
@@ -87,6 +114,7 @@ export function generateEmojiDataUrl(emoji: string, config: IconConfig = DEFAULT
   return canvas.toDataURL('image/png');
 }
 
+
 /**
  * 生成文本图标的 data URL
  */
@@ -99,11 +127,14 @@ export function generateTextDataUrl(text: string, config: IconConfig = DEFAULT_C
 
   if (!ctx) return '';
 
-  ctx.font = '16px system-ui';
+  ctx.font = '12px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   ctx.clearRect(0, 0, size, size);
+  
+  applyRoundedRectClip(ctx, size);
+  drawWhiteBackground(ctx, size);
 
   ctx.fillStyle = '#000';
   const displayText = text.trim().slice(0, 2);
@@ -118,10 +149,22 @@ export function generateTextDataUrl(text: string, config: IconConfig = DEFAULT_C
 export function generateSvgDataUrl(svgElement: SVGElement, config: IconConfig = DEFAULT_CONFIG) {
   const { size = 32 } = config;
   const newSvg = svgElement.cloneNode(true) as SVGElement;
+  
+  // 设置 SVG 尺寸
   newSvg.setAttribute('width', size.toString());
   newSvg.setAttribute('height', size.toString());
+  
+  // 添加圆角矩形背景
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('width', '100%');
+  rect.setAttribute('height', '100%');
+  rect.setAttribute('rx', (size / 4).toString()); // 圆角半径
+  rect.setAttribute('fill', '#fff');
+  newSvg.insertBefore(rect, newSvg.firstChild);
+  
+  // 设置描边颜色
   newSvg.setAttribute('stroke', 'currentColor');
-
+  
   const svgString = new XMLSerializer().serializeToString(newSvg);
   return `data:image/svg+xml;base64,${btoa(svgString)}`;
 }
