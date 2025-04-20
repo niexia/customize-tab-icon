@@ -50,10 +50,11 @@ npm run build
 Open the [Changeicon](https://chromewebstore.google.com) directly, or go to [chromewebstore](https://chromewebstore.google.com) and serarch 'changicon'.
 
 ### Manual install
-1. Open Chrome Extensions page (`chrome://extensions/`)
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select the `dist` directory of this project
+1. `npm run build`
+2. Open Chrome Extensions page (`chrome://extensions/`)
+3. Enable "Developer mode"
+4. Click "Load unpacked"
+5. Select the `.output/chrome-mv3` directory of this project
 
 ## 🤝 Contributing
 
