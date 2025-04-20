@@ -1,11 +1,11 @@
 import { Smile } from "lucide-react";
-import { ActionItem } from "./action-item";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { ActionItem } from "../action-item";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import Picker from "@emoji-mart/react"
 import data from "@emoji-mart/data"
 import { useState } from "react";
 import { usePopupHeight } from "@/hooks/usePopupHeight";
-import styles from "./emoji-icon.module.css";
+import styles from "./index.module.css";
 import { generateEmojiDataUrl } from "@/lib/utils";
 
 interface EmojiIconProps {

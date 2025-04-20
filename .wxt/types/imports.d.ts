@@ -5,7 +5,6 @@ declare global {
   const ActionItem: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/action-item')['ActionItem']
   const Contact: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/contact')['Contact']
   const ContentScriptContext: typeof import('wxt/client')['ContentScriptContext']
-  const EmojiIcon: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/emoji-icon')['EmojiIcon']
   const Header: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/header')['Header']
   const IconDisplay: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/icon-display')['IconDisplay']
   const IconsIcon: typeof import('/Users/bytedance/Documents/inspire/chrome-customize-tab-icon/components/icons-icon')['IconsIcon']
