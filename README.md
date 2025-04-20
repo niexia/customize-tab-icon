@@ -2,6 +2,9 @@
 
 A simple yet powerful Chrome extension that allows you to customize website (browser tab) icons . Built with WXT + React + shadcn/ui + Tailwindcss.
 
+<img src="./public/design.png">
+<img src="./public/showcase.png">
+
 ## ✨ Features
 🎨 Custom Tab Icons
 - Text icons (up to 2 characters)
