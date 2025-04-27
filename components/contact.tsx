@@ -22,7 +22,7 @@ const SOCIAL_LINKS: SocialLink[] = [
 
 export function Contact() {
   const handleOpenUrl = (url: string) => {
-    chrome.tabs.create({ url });
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
