@@ -2,7 +2,7 @@
   "name": "Changicon",
   "description": "A extension that allows you to customize website icon (tab icon).",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
