@@ -1,4 +1,4 @@
-# Website (Tab) Icon Customizer
+# Changicon - Website (Tab) Icon Customizer
 
 A simple yet powerful Chrome extension that allows you to customize website (browser tab) icons . Built with WXT + React + shadcn/ui + Tailwindcss.
 
@@ -50,7 +50,7 @@ npm run build
 ## 📦 Installation
 
 ### Webstore
-Open the [Changeicon](https://chromewebstore.google.com) directly, or go to [chromewebstore](https://chromewebstore.google.com) and serarch 'changicon'.
+Open the [Changeicon](https://chromewebstore.google.com/detail/changicon/pcnnpfojchdoapfnaanpibdkjbdmglhi) directly
 
 ### Manual install
 1. `npm run build`
