@@ -10,23 +10,24 @@
 
 ## Decisions
 
-### 1. One store document
+### 1. A small store kit, separate policy
 
-All publishing information lives in [`store/README.md`](../../store/README.md):
+The dashboard cheat sheet lives in [`store/README.md`](../../store/README.md):
 listing copy, asset map, single purpose, permission justifications, data usage,
-reviewer steps, checklist, promo-video notes, and the public privacy policy.
-`store/assets/` remains the only other store content.
+reviewer steps, checklist, and optional video notes. `store/assets/` holds the
+images. The public policy is
+[`docs/privacy.md`](../../docs/privacy.md), because it is a standalone page
+linked directly from the Chrome Web Store.
 
 The privacy policy URL is now
-`https://github.com/niexia/customize-tab-icon/blob/main/store/README.md#privacy-policy`.
-The `Privacy policy` heading and `#privacy-policy` anchor are part of the
-contract; renaming it breaks the dashboard URL. A dedicated page remains an
-option if GitHub Pages is enabled later.
+`https://github.com/niexia/customize-tab-icon/blob/main/docs/privacy.md`. A
+GitHub Pages URL remains an option later.
 
-Trade-off: the file is longer and mixes marketing/legal content. In exchange,
-there is one place to update and no cross-file drift. The release-docs test
-asserts that `store/` contains exactly one Markdown file, so a second kit file
-cannot appear by accident.
+Trade-off: two documents instead of one, but each has one job: the store README
+is operational (what to paste/upload), and the policy is legal (what is stored
+and why). The store README dropped from ~394 to ~190 lines. The release-docs
+test asserts that `store/` contains exactly one Markdown file and that the
+policy exists and still carries the Limited Use statement.
 
 ### 2. Changelog uses changelogen
 
@@ -58,7 +59,7 @@ run with the normal test suite:
 - `CHANGELOG.md` has the version heading (both styles);
 - exactly five 1280×800 opaque screenshots, plus promo/icon sizes;
 - `store/` has exactly one Markdown file;
-- the privacy anchor exists;
+- the policy page exists and contains the Limited Use statement;
 - README has a product screenshot;
 - relative links in the docs/store resolve.
 
@@ -81,13 +82,14 @@ CI.
   Commits flow.
 - The release gate is the existing test runner; no custom CLI, no extra `check`
   stage.
-- The privacy policy is inside the store README rather than a dedicated page.
+- The policy is a dedicated docs page; the store README links to it instead of
+  embedding legal text.
 
 ## Follow-ups
 
 1. Tag `v1.1.0` before the next release so changelogen has a range baseline.
-2. If reviewers prefer a standalone policy page, enable GitHub Pages and move the
-   `Privacy policy` section to a dedicated page, then update the URL.
+2. If a stable URL is preferred, publish `docs/privacy.md` through GitHub Pages
+   and update the dashboard URL.
 3. Evaluate whether the screenshot harness can shrink further; it remains the
    only custom script and is not needed for normal development.
 4. Keep the action versions and the WXT/API v2 migration under review.

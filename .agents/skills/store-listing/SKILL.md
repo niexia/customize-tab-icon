@@ -7,19 +7,18 @@ description: Use when updating the Changicon Chrome Web Store listing — copy, 
 
 Everything is in [`store/README.md`](../../../store/README.md): live listing
 copy, the asset map, permission justifications, data disclosures, reviewer
-steps, the submission checklist, and the public privacy policy. Images are in
-[`store/assets/`](../../../store/assets/); there is intentionally only one store
-document.
+steps, and the submission checklist. Images are in
+[`store/assets/`](../../../store/assets/); the public policy is a separate page,
+[`docs/privacy.md`](../../../docs/privacy.md), because it is linked directly from
+the Chrome Web Store.
 
 ## Facts to keep straight
 
 | Item | Current value |
 | --- | --- |
 | Extension ID | `pcnnpfojchdoapfnaanpibdkjbdmglhi` |
-| Version | `1.1.0` (must match `package.json` on release) |
-| Title (manifest) | `Changicon` — 9/75 characters |
-| Summary (manifest `description`) | 110/132 characters |
-| Detailed description | 1,862/16,000 (dashboard limit) |
+| Version | Read `package.json`; must match the built manifest on release |
+| Listing limits | Verify title, summary, and description counts in `store/README.md` before pasting |
 | Category / language | Tools / English |
 | Screenshots | exactly 5, 1280×800, full-bleed, opaque PNG |
 | Small promo tile | 440×280 |
@@ -28,7 +27,7 @@ document.
 | Remote code | No |
 | Permissions | `storage`, `activeTab`, `scripting`, `*://*/*` |
 | Data usage | local-only; recommended **Web history** (rationale is in the store README) |
-| Privacy policy | `store/README.md#privacy-policy` |
+| Privacy policy | `docs/privacy.md` |
 
 Chrome Web Store API v1.1 is retired (2026-10-15). WXT 0.20's `wxt submit` does
 not work; upload manually. API v2 needs WXT ≥ 0.21.5, Node 22, and a service
@@ -44,9 +43,9 @@ account — do not pretend it is configured.
    usage, the checklist, and the version marker. Count characters; the summary
    hard limit is 132. Keep "favicon" and other keywords to five or fewer uses and
    avoid unverifiable claims.
-3. **Privacy.** If the manifest or storage changed, update the justifications and
-   the `Privacy policy` section in the same file. Keep the
-   `#privacy-policy` heading and the Limited Use statement.
+3. **Privacy.** If the manifest or storage changed, update the justifications in
+   `store/README.md` and the policy in `docs/privacy.md` in the same commit. Keep
+   the effective date and the Limited Use statement.
 4. **Assets.** If the UI changed:
 
    ```bash
@@ -94,12 +93,13 @@ account — do not pretend it is configured.
   policy already discloses it. Never select categories the extension does not
   handle.
 - Certifications: no sale, no unrelated use, no creditworthiness use.
-- Privacy policy URL must be public and current. Prefer GitHub Pages over a blob
-  URL if available.
+- Privacy policy URL is `docs/privacy.md`; it must be public and current. Prefer
+  GitHub Pages over a blob URL if available.
 
 ## Guardrails
 
-- Do not add a second store document; keep the kit in `store/README.md`.
+- Do not add more store documents; keep the kit in `store/README.md` and the
+  legal policy in `docs/privacy.md`.
 - Do not change the manifest `name` (the store title and browser label) without
   explicit approval; it changes the extension's identity.
 - Do not add a permission to make a screenshot or feature easier.

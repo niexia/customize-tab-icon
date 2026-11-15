@@ -113,8 +113,8 @@ The full design, storage schema, and sequence diagrams are in
 The content script only reads and rewrites `<link rel="icon">` elements. It does
 not read page text, form values, cookies, or network requests. The extension has
 no server and makes no requests. See
-[`store/README.md`](store/README.md) for the listing copy, permission
-justifications, and privacy policy.
+[`store/README.md`](store/README.md) for the listing copy and permission
+justifications, and [`docs/privacy.md`](docs/privacy.md) for the policy.
 
 Chrome's own pages (`chrome://`), extension pages, and the Chrome Web Store
 cannot be customized because Chrome does not allow content scripts there.
@@ -168,7 +168,8 @@ The full checklist, changelog options, and rollback steps are in
 | --- | --- |
 | [`docs/architecture.md`](docs/architecture.md) | Runtime topology, storage model, apply/reset/init sequences, favicon DOM state machine, migrations, security, limitations |
 | [`docs/release-process.md`](docs/release-process.md) | Versioning, changelog, checks, tagging, GitHub Release, store submission, rollback |
-| [`store/README.md`](store/README.md) | Store kit: listing copy, assets, permissions/privacy, reviewer steps, checklist, privacy policy |
+| [`store/README.md`](store/README.md) | Store kit: listing copy, assets, permission answers, reviewer steps, checklist |
+| [`docs/privacy.md`](docs/privacy.md) | Public privacy policy |
 | [`AGENTS.md`](AGENTS.md) | Agent operating manual and invariants |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release history |
 

@@ -6,7 +6,7 @@ This is the checklist for shipping a Changicon version. It covers the changelog,
 documentation, store assets, the GitHub release, and Chrome Web Store submission.
 
 - Applies to: **v1.1.0**
-- Related: [Architecture](architecture.md) · [Store kit](../store/README.md) · [AGENTS.md](../AGENTS.md)
+- Related: [Architecture](architecture.md) · [Store kit](../store/README.md) · [Privacy policy](privacy.md) · [AGENTS.md](../AGENTS.md)
 
 ---
 
@@ -104,11 +104,13 @@ At minimum, every release updates:
 2. **`docs/architecture.md`** — the `<!-- release: X.Y.Z -->` marker, and any
    diagram/flow affected by the change.
 3. **`docs/release-process.md`** — this marker and any process change.
-4. **`store/README.md`** — the version marker, listing copy, permission/privacy
-   answers, and reviewer checklist if behavior changed.
-5. **`store/assets/`** and **`docs/screenshots/`** — regenerate when the popup UI
+4. **`store/README.md`** — the version marker, listing copy, permission answers,
+   and reviewer checklist if behavior changed.
+5. **`docs/privacy.md`** — the public policy if data handling or contact details
+   changed.
+6. **`store/assets/`** and **`docs/screenshots/`** — regenerate when the popup UI
    or a user-visible flow changed.
-6. **`README.md`** — features, screenshots, or links if the user-facing story
+7. **`README.md`** — features, screenshots, or links if the user-facing story
    changed.
 
 ### Doc sync matrix
@@ -118,7 +120,7 @@ At minimum, every release updates:
 | New icon source / picker | update flow + module map | — | feature bullet | regenerate | feature bullet |
 | Storage key or migration | update data model + migration diagram | note migration | — | — | — |
 | Scope/precedence behavior | update flows + precedence | — | feature bullet | regenerate | feature bullet |
-| Permission added/removed | permissions section | — | privacy practices | — | permissions |
+| Permission added/removed | permissions section | — | privacy practices + [policy](privacy.md) | — | permissions |
 | New error/rollback path | failure table | — | — | — | — |
 | Release tooling only | — | update checklist | — | — | development section |
 
@@ -136,8 +138,9 @@ pnpm store:assets     # optional; only when the UI changed
 ```
 
 `pnpm check` expands to `pnpm compile && pnpm lint && pnpm test && pnpm build`.
-`pnpm test` includes the release-docs checks. The store asset script requires a local Chrome/Chromium (or
-`CHROME_PATH`); it is not part of CI because the generated PNGs are committed.
+`pnpm test` includes the release-docs and agent-config checks. The store asset
+script requires a local Chrome/Chromium (or `CHROME_PATH`); it is not part of CI
+because the generated PNGs are committed.
 
 Before tagging, confirm:
 
@@ -146,7 +149,8 @@ Before tagging, confirm:
 - [ ] The changelog entry is reviewed and contains no accidental `chore` noise.
 - [ ] The architecture marker is updated and diagrams still match the code.
 - [ ] Store screenshots are current and exactly 1280×800.
-- [ ] The privacy policy is live at the URL in `store/README.md#privacy-policy`.
+- [ ] The privacy policy is live at the URL in `store/README.md`
+      (`docs/privacy.md`).
 - [ ] The permission justifications still match the manifest.
 
 ---
@@ -182,10 +186,12 @@ The tag triggers [`.github/workflows/release.yml`](../.github/workflows/release.
 1. checkout with full history and tags;
 2. pnpm + Node from `.nvmrc`;
 3. `pnpm install --frozen-lockfile`;
-4. `pnpm compile`, `pnpm lint`, `pnpm test` (includes release-docs checks);
-5. `pnpm zip`;
-6. extract the `## [X.Y.Z]` or `## X.Y.Z` section from `CHANGELOG.md`;
-7. create the GitHub Release and attach `*-chrome.zip`.
+4. verify the tag matches `package.json`;
+5. `pnpm check` (compile, lint, test, build; includes release-docs and
+   agent-config checks);
+6. `pnpm zip`;
+7. extract the `## [X.Y.Z]` or `## X.Y.Z` section from `CHANGELOG.md`;
+8. create the GitHub Release and attach `*-chrome.zip`.
 
 The workflow needs only the default `GITHUB_TOKEN` with `contents: write`.
 
@@ -211,11 +217,10 @@ The Chrome Web Store API v1.1 used by WXT 0.20's `wxt submit` was retired on
 3. Update **Store listing** from `store/README.md` (copy and assets from
    `store/assets/`). Screenshots: 5 × 1280×800; small promo tile 440×280;
    marquee 1400×560; store icon 128×128.
-4. Update **Privacy practices** from the “Permissions and privacy practices”
-   section of `store/README.md`:
+4. Update **Privacy practices** from the “Privacy practices” section of
+   `store/README.md`:
    single purpose, each permission justification, data usage, remote code = No.
-5. Confirm the **Privacy policy URL** is live
-   (`store/README.md#privacy-policy`).
+5. Confirm the **Privacy policy URL** is live (`docs/privacy.md`).
 6. **Test instructions** from the “Reviewer test instructions” section of
    `store/README.md` (optional but useful for a broad host permission).
 7. **Distribution**: Public, all regions (or the regions you intend).

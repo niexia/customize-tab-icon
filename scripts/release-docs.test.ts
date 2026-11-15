@@ -10,14 +10,23 @@ const requiredDocs = [
   'README.md',
   'CHANGELOG.md',
   'AGENTS.md',
+  '.agents/README.md',
   'docs/README.md',
   'docs/AGENTS.md',
   'docs/architecture.md',
   'docs/release-process.md',
+  'docs/privacy.md',
   'store/README.md',
 ];
 
-describe('release documentation and store assets', () => {
+const SKILLS_DIR = resolve(ROOT, '.agents/skills');
+const agentSkillFiles = existsSync(SKILLS_DIR)
+  ? readdirSync(SKILLS_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => `.agents/skills/${entry.name}/SKILL.md`)
+  : [];
+
+describe('release docs, store assets, and agent context', () => {
   it('keeps the store kit to one document', () => {
     const storeDocs = readdirSync(resolve(ROOT, 'store')).filter((name) => name.endsWith('.md'));
     expect(storeDocs).toEqual(['README.md']);
@@ -26,6 +35,60 @@ describe('release documentation and store assets', () => {
   it('has every required document', () => {
     const missing = requiredDocs.filter((file) => !existsSync(resolve(ROOT, file)));
     expect(missing).toEqual([]);
+  });
+
+  it('has valid agent skill frontmatter', () => {
+    const errors: string[] = [];
+
+    for (const file of agentSkillFiles) {
+      if (!existsSync(resolve(ROOT, file))) {
+        errors.push(`${file}: missing`);
+        continue;
+      }
+
+      const text = readFileSync(resolve(ROOT, file), 'utf8');
+      const frontmatter = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text);
+      if (!frontmatter) {
+        errors.push(`${file}: missing YAML frontmatter`);
+        continue;
+      }
+
+      const [, yaml = '', body = ''] = frontmatter;
+      const expectedName = file.split('/')[2];
+      const name = /^name:\s*([a-z0-9-]+)\s*$/m.exec(yaml)?.[1];
+      const description = /^description:\s*\S.+$/m.test(yaml);
+
+      if (name !== expectedName) {
+        errors.push(`${file}: name must be "${expectedName}"`);
+      }
+      if (!description) {
+        errors.push(`${file}: description is missing`);
+      }
+      if (!body.trim()) {
+        errors.push(`${file}: body is empty`);
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('routes every existing agent skill', () => {
+    const agents = readFileSync(resolve(ROOT, 'AGENTS.md'), 'utf8');
+    const skillsSection = agents.split('## Agent skills')[1]?.split(/\n## /)[0] ?? '';
+    const routed = new Set(
+      [...skillsSection.matchAll(/^\| `([a-z0-9-]+)` \|/gm)]
+        .map((match) => match[1])
+        .filter((name): name is string => Boolean(name)),
+    );
+    const skills = agentSkillFiles
+      .map((file) => file.split('/')[2])
+      .filter((name): name is string => Boolean(name));
+    const missing = [...routed].filter(
+      (name) => !existsSync(resolve(ROOT, `.agents/skills/${name}/SKILL.md`)),
+    );
+    const unrouted = skills.filter((name) => !routed.has(name));
+
+    expect({ missing, unrouted }).toEqual({ missing: [], unrouted: [] });
   });
 
   it('marks the docs with the package version', () => {
@@ -86,17 +149,25 @@ describe('release documentation and store assets', () => {
     expect(readme).toMatch(/docs\/screenshots\/|store\/assets\//);
   });
 
-  it('keeps the privacy policy anchor public', () => {
+  it('links to a complete public privacy policy', () => {
     const storeReadme = readFileSync(resolve(ROOT, 'store/README.md'), 'utf8');
-    expect(storeReadme).toMatch(/^## Privacy policy$/m);
-    expect(storeReadme).toContain('#privacy-policy');
+    const policy = readFileSync(resolve(ROOT, 'docs/privacy.md'), 'utf8');
+    expect(storeReadme).toContain('docs/privacy.md');
+    expect(policy).toMatch(/^# Changicon Privacy Policy$/m);
+    expect(policy).toMatch(/^## Limited Use statement$/m);
+    expect(policy).toContain('Effective date');
   });
 
   it('has no broken relative links in the docs and store kit', () => {
     const errors: string[] = [];
-    const files = [...requiredDocs, 'store/README.md'];
+    const files = [...requiredDocs, ...agentSkillFiles];
 
     for (const file of new Set(files)) {
+      if (!existsSync(resolve(ROOT, file))) {
+        errors.push(`${file}: missing`);
+        continue;
+      }
+
       const text = readFileSync(resolve(ROOT, file), 'utf8').replace(/```[\s\S]*?```/g, '');
       for (const match of text.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
         const target = (match[1] ?? '').trim().replace(/^<|>$/g, '').split('#')[0];

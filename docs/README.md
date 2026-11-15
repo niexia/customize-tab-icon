@@ -14,7 +14,8 @@ asset is stale.
 | [Architecture](architecture.md) | Runtime topology, storage schema, apply/reset/migration sequences, favicon DOM state machine, security, known limitations | Any behavior, storage, permission, or flow change |
 | [Release process](release-process.md) | Versioning, Conventional Commits, changelog, checks, tag/release workflow, Chrome Web Store submission, rollback | Any release/process change |
 | [AGENTS.md](AGENTS.md) | Rules for agents editing this directory | The docs workflow changes |
-| [`../store/README.md`](../store/README.md) | Store kit: listing copy, asset map, permission/privacy answers, reviewer steps, checklist, and the public privacy policy | Features, permissions, data handling, or asset requirements change |
+| [Privacy policy](privacy.md) | Public policy: what is stored, how it is used, retention, Limited Use | Data handling or contact details change |
+| [`../store/README.md`](../store/README.md) | Store kit: listing copy, asset map, permission answers, reviewer steps, checklist | Features, permissions, or asset requirements change |
 
 ## Screenshots and diagrams
 
@@ -59,6 +60,7 @@ pnpm exec vitest run scripts/release-docs.test.ts
 
 The release-docs checks verify required files, the release markers, the changelog
 entry, the five store screenshots at 1280×800, the promo tiles, the store icon,
-the single-document store kit, and relative links inside the docs. They do not
+the single-document store kit, relative links inside the docs, and the agent
+skill frontmatter, links, and routing. They do not
 validate Mermaid rendering; preview the diagram on GitHub or in an IDE before
 merging.

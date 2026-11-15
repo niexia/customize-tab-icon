@@ -12,22 +12,10 @@ uploaded image) for one page or a whole site. It is built with **WXT 0.20 +
 React 19 + TypeScript + Tailwind 4 + shadcn/Radix**, tested with Vitest, packaged
 with pnpm.
 
-- Current version: **1.1.0** (`package.json`; the manifest version is derived).
+- Version: `package.json`; WXT derives the manifest version from it.
 - Store: <https://chromewebstore.google.com/detail/changicon/pcnnpfojchdoapfnaanpibdkjbdmglhi>
 - Target: Chrome MV3. A Firefox MV2 build exists for local checks but is not the
   published target.
-
-## First steps
-
-1. Read this file and, for documentation work, [`docs/AGENTS.md`](docs/AGENTS.md).
-2. Read [`docs/architecture.md`](docs/architecture.md) before changing runtime
-   behavior, storage, messaging, or permissions.
-3. Load the relevant skill from `.agents/skills/` **before** starting:
-   - release work → `release-chrome-extension`
-   - store copy/assets → `store-listing`
-   - architecture/docs → `sync-docs`
-4. Prefer the smallest change that satisfies the request. Do not refactor
-   unrelated code or reformat whole files.
 
 ## Commands
 
@@ -40,7 +28,7 @@ pnpm build               # production build → .output/chrome-mv3
 pnpm zip                 # build + zip → .output/changicon-<version>-chrome.zip
 pnpm compile             # tsc --noEmit
 pnpm lint                # ESLint
-pnpm test                # Vitest
+pnpm test                # Vitest (includes docs + agent-config checks)
 pnpm check               # compile + lint + test + build
 pnpm changelog --minor   # changelogen: bump + prepend CHANGELOG entry
 pnpm store:assets        # rebuild + capture store assets and README images
@@ -48,6 +36,31 @@ pnpm store:assets        # rebuild + capture store assets and README images
 
 `pnpm check` is the definition of done for code changes. It must pass before a
 commit that changes runtime behavior.
+
+## Development loop
+
+1. **Load context.** Read [`docs/architecture.md`](docs/architecture.md) before
+   changing runtime behavior, storage, messaging, or permissions. Under `docs/`,
+   read [`docs/AGENTS.md`](docs/AGENTS.md). Load a task skill only when the task
+   matches one (release or store); do not preload every document.
+2. **Do what the task requires, and keep it scoped.** Fix the root cause;
+   include the migrations, structural changes, tests, and docs the fix actually
+   needs. Do not optimize for a small diff at the expense of correctness. Keep
+   `lib/icon-key.ts` pure, add Vitest coverage for logic, and preserve the
+   messaging/storage contracts. Do not refactor unrelated code or reformat whole
+   files.
+3. **Sync affected surfaces.** Use the doc-sync matrix in
+   [`docs/release-process.md`](docs/release-process.md). Update architecture
+   before store copy. Internal refactors and test-only changes do not need
+   doc churn.
+4. **Prove it.** Run `pnpm check`; for content-script, favicon-DOM, or manifest
+   changes, also run the manual smoke test below and inspect the built
+   `.output/chrome-mv3/manifest.json` when permissions changed.
+5. **Report.** Summarize what changed, what was verified, and any remaining
+   risk. Leave changes uncommitted by default; commit only when the user asks.
+   Never tag, push, or publish without an explicit request.
+
+Release is a separate, opt-in workflow; see [Release](#release).
 
 ## Non-negotiable invariants
 
@@ -67,10 +80,13 @@ commit that changes runtime behavior.
    `#changicon-favicon` link on reset and point it at the original URL. Removing
    it makes Chrome keep the custom image.
 7. **Site scope is the registrable domain**, not the exact host. The suffix list
-   in `lib/icon-key.ts` is deliberate; update tests with it.
-8. **Permissions are reviewed.** Do not add a permission without updating the
-   permission justifications and privacy policy in `store/README.md` and the
-   manifest rationale.
+   in `lib/icon-key.ts` is deliberate; update tests with it. Whole-site
+   apply/reset must also push to already-open matching tabs; storage watchers
+   alone miss tabs loaded before install/update.
+8. **Permissions are reviewed.** Do not add, remove, or widen a permission
+   without an explicit request. Update `docs/architecture.md`,
+   `store/README.md` permission answers, and `docs/privacy.md` in the same
+   change.
 9. **No tracking.** No analytics, telemetry, crash reporting, ads, or data sale.
 10. **Every release updates docs.** `docs/architecture.md`,
     `docs/release-process.md`, and `store/README.md` carry a
@@ -89,13 +105,13 @@ commit that changes runtime behavior.
 | `lib/icon-image.ts` | Canvas/SVG generation and upload resizing |
 | `lib/messaging.ts` | Typed popup ↔ content protocol |
 | `components/` | Popup UI, providers, pickers |
-| `docs/` | Architecture, release process, agent docs |
-| `store/` | Chrome Web Store copy and exact-size assets |
+| `docs/` | Architecture, release process, privacy policy, agent docs |
+| `store/` | Chrome Web Store copy, permission answers, exact-size assets |
 | `scripts/` | Release-docs test and the store screenshot harness |
-| `.agents/skills/` | Auto-discovered agent skills |
+| `.agents/skills/` | On-demand agent skills |
 | `.github/workflows/` | CI and tag-triggered release |
 
-## Making changes
+## Working rules
 
 ### Code
 
@@ -105,62 +121,37 @@ commit that changes runtime behavior.
   The store harness is the fastest way to see it without loading the extension.
 - Preserve the typed messaging protocol; add a message type rather than
   bypassing `lib/messaging.ts`.
-- Do not change `wxt.config.ts` permissions or the content-script match without
-  an explicit request and the permission/privacy updates in `store/README.md`.
+- Permission and content-script match changes are covered by invariant 8; do not
+  bundle them into unrelated work.
 
 ### Docs
 
 - Read [`docs/AGENTS.md`](docs/AGENTS.md) and follow its diagram conventions.
-- Update the architecture **before** the store copy so the listing never
-  promises behavior that does not exist.
-- Bump the release markers only when preparing a release, after reviewing the
-  document content.
+- Update the architecture **before** the store copy so the listing never promises
+  behavior that does not exist.
+- Bump release markers only when preparing a release, after reviewing the
+  document content. Keep diagrams as editable Mermaid source.
+- The release-docs test checks markers, the changelog entry, asset dimensions,
+  relative links, and agent skill frontmatter.
 
 ### Store assets
 
-- Run `pnpm store:assets`; do not hand-edit screenshots.
-- The five screenshots must be 1280×800, opaque PNGs. The promo tiles are
-  440×280 and 1400×560. The release-docs test verifies dimensions and alpha.
-- The native `<input type="file">` follows the host OS language; keep English
-  screenshots on an English-locale machine or use the text-badge shot. Do not
-  retouch the control.
+- Run `pnpm store:assets`; do not hand-edit generated PNGs. The script rebuilds
+  the popup, captures it with a mock `chrome.*` environment, and writes
+  `store/assets/` plus `docs/screenshots/`.
+- Regenerate when the popup UI or a user-visible flow changed, and review all
+  five screenshots and both promo tiles.
+- Exact asset rules live in [`store/README.md`](store/README.md) and the
+  `store-listing` skill; the release-docs test enforces the sizes and opacity.
 
-## Release protocol
-
-Full detail: [`docs/release-process.md`](docs/release-process.md). Short form:
-
-```bash
-pnpm changelog --minor                         # or without a flag to infer semver
-# changelogen updates package.json + CHANGELOG.md; it does not tag or push
-# update docs markers + diagrams + store copy/assets
-pnpm check
-pnpm zip
-git add -A
-git commit -m "chore(release): vX.Y.Z"
-git tag vX.Y.Z
-git push origin main --follow-tags
-```
-
-- Tags trigger `.github/workflows/release.yml`, which runs checks, zips, and
-  creates the GitHub Release with the zip attached.
-- **Do not push a tag or publish to the Chrome Web Store without an explicit
-  user request.** Preparing a release (version, changelog, docs, zip) is not
-  permission to publish it.
-- Chrome Web Store submission is **manual** in 2026: the API v1.1 path used by
-  WXT 0.20's `wxt submit` was retired on 2026-10-15. Upload the zip in the
-  Developer Dashboard. API v2 automation requires WXT ≥ 0.21.5, Node 22, and a
-  service account; document it, do not pretend it works today.
-- The store version must increase; never re-upload an older version or edit the
-  built manifest by hand.
-
-## Verification expectations
+## Verification
 
 | Change | Minimum verification |
 | --- | --- |
 | Pure helper / storage key | `pnpm test` + `pnpm compile` |
 | Popup UI | `pnpm check` + screenshot review (`pnpm store:assets`) |
-| Content script / favicon DOM | `pnpm test` + manual check on a real page: apply, reload, reset |
-| Permissions / manifest | `pnpm build`, inspect `.output/chrome-mv3/manifest.json`, update store docs |
+| Content script / favicon DOM | `pnpm test` + manual smoke test, including pre-opened tabs |
+| Permissions / manifest | `pnpm build`, inspect `.output/chrome-mv3/manifest.json`, update architecture + store/README + docs/privacy |
 | Docs only | `pnpm test` (or `pnpm exec vitest run scripts/release-docs.test.ts`) |
 | Release | `pnpm check`, zip smoke test, dashboard preview |
 
@@ -168,34 +159,55 @@ Manual smoke test (load `.output/chrome-mv3` unpacked):
 
 1. Apply an emoji to a page; reload; the icon persists.
 2. Reset; the original favicon returns without a reload.
-3. Apply a whole-site icon; open a second path and a subdomain; the icon applies.
-4. Clear all; all tabs return to their own icons.
-5. Check the service worker/console for errors; there should be no network
-   requests from the extension.
+3. Open a second path and a subdomain of the same site in separate tabs
+   **before** applying a whole-site icon; apply on one tab; both update without
+   reloading; Reset site restores both.
+4. Clear all; tabs with the current content script return to their own icons. A
+   tab loaded before the extension update may need one reload.
+5. Check the popup and page consoles for errors; the extension should make no
+   network requests.
+
+## Release
+
+Full runbook: [`docs/release-process.md`](docs/release-process.md) and the
+`release-chrome-extension` skill. Short rules:
+
+- Prepare a release only when asked. Preparing files is not permission to tag,
+  push, or upload to the Chrome Web Store.
+- A `vX.Y.Z` tag triggers `.github/workflows/release.yml` (checks, zip, GitHub
+  Release). Chrome Web Store upload is manual: WXT 0.20's `wxt submit` uses the
+  retired API v1; do not run it and claim success.
+- The store version must increase. Never hand-edit the built manifest.
+- Changelogen uses the latest git tag as its range. If no tag exists yet, tag the
+  current release before generating the next changelog entry; otherwise it
+  covers the whole history.
 
 ## Commit and PR style
 
-- Conventional Commits: `feat(scope): ...`, `fix(scope): ...`, `docs: ...`,
-  `chore: ...`. The changelog generator only reads `feat`, `fix`, `perf`, and
+- Leave changes uncommitted by default. Commit only when the user asks.
+- When committing, use Conventional Commits (`feat(scope): ...`,
+  `fix(scope): ...`, `docs: ...`, `chore: ...`) and one logical change per
+  commit. The changelog generator only reads `feat`, `fix`, `perf`, and
   `refactor`; use the right type for user-visible work.
-- One logical change per commit. Include docs/store updates in the same commit as
-  the behavior change when practical.
+- Include docs/store updates in the same commit as the behavior change when
+  practical. If user-visible behavior, a permission, or a storage/messaging
+  contract changed, the matching docs update is part of done; internal
+  refactors and tests do not require doc churn.
 - Do not commit `.output/`, `.store-demo/`, `node_modules/`, or secrets.
   `.env.submit` is gitignored for future store credentials.
-- A commit that changes behavior without a docs update should be treated as
-  incomplete, even if CI passes (the marker only protects releases).
 
 ## Agent skills
 
-Skills are auto-discovered from `.agents/skills/<name>/SKILL.md` (DSH and
-compatible harnesses). The root `AGENTS.md` is auto-loaded; skills are loaded on
-demand. Use the skill catalog when the task matches one of:
+Skills are discovered from `.agents/skills/<name>/SKILL.md` and loaded on
+demand. Use:
 
 | Skill | Use for |
 | --- | --- |
 | `release-chrome-extension` | Version bump, changelog, docs sync, zip, tag, GitHub release, store submission |
-| `store-listing` | Store copy, permissions/privacy answers, screenshot/promo regeneration |
-| `sync-docs` | Architecture diagrams, docs markers, doc-sync matrix |
+| `store-listing` | Store copy, permission answers, screenshots/promo, submission checks |
+
+Documentation work uses [`docs/AGENTS.md`](docs/AGENTS.md) and the doc-sync
+matrix in the release process; there is no separate docs skill.
 
 If a skill and this file disagree, the skill is more specific for its task; if
 either disagrees with the code or the Chrome Web Store policy, verify and update
@@ -205,6 +217,8 @@ the documentation rather than following it blindly.
 
 - Content scripts run on `http(s)` top frames only; `chrome://`, extension pages,
   and the Chrome Web Store cannot be customized.
+- The extension requests `*://*/*` host access so whole-site changes can sync
+  already-open tabs. Its content scripts already run on all sites.
 - `chrome.storage.local` is 10 MB; icons are data URLs. Do not store full images
   or per-pixel data beyond the 128 px icon.
 - There is no cross-device sync (`storage.local`, not `storage.sync`).

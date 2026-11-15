@@ -31,15 +31,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm compile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm test
-
       - name: Check tag matches package version
         run: |
           VERSION="$(node -p "require('./package.json').version")"
@@ -47,6 +38,9 @@ jobs:
             echo "Tag $GITHUB_REF_NAME does not match package.json v$VERSION"
             exit 1
           fi
+
+      - name: Checks
+        run: pnpm check
 
       - name: Build and zip
         run: pnpm zip

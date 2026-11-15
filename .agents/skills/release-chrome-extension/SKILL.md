@@ -6,8 +6,9 @@ description: Use when preparing, tagging, or publishing a Changicon release — 
 # Release Changicon
 
 Read the repository [`AGENTS.md`](../../../AGENTS.md), then
-[`docs/release-process.md`](../../../docs/release-process.md) and
-[`store/README.md`](../../../store/README.md).
+[`docs/release-process.md`](../../../docs/release-process.md),
+[`store/README.md`](../../../store/README.md), and
+[`docs/privacy.md`](../../../docs/privacy.md).
 
 ## Preconditions
 
@@ -15,8 +16,9 @@ Read the repository [`AGENTS.md`](../../../AGENTS.md), then
   Preparing files is not permission to publish.
 - The working tree is clean, or the user accepts that unrelated changes will be
   included in the release commit.
-- You know the target version (default: let changelogen infer it). The last
-  published store build is `v1.0.1`; this repository is prepared for `v1.1.0`.
+- You know the target version (default: let changelogen infer it). Verify the
+  latest git tag and the version currently live in the store dashboard; do not
+  assume the package version is already published.
 - Node 22+ (`nvm use` reads `.nvmrc`) and pnpm are available. Store submission
   needs dashboard access and may not be possible from the agent.
 
@@ -49,20 +51,21 @@ tag, push, publish, or create a GitHub release.
 - Use an explicit `--patch` / `--minor` / `--major` if the commits do not imply
   the intended bump.
 - Changelogen uses the latest git tag as its range. If no tag exists, it covers
-  the whole history and would duplicate the curated 1.1.0 entry; tag `v1.1.0`
-  before the next release.
+  the whole history and can duplicate the current entry; tag the current release
+  before generating the next changelog entry.
 - Review the entry; curate or trim wording if needed.
 
 ### 3. Documentation
 
-Follow [`sync-docs`](../sync-docs/SKILL.md):
+Read [`docs/AGENTS.md`](../../../docs/AGENTS.md) and the doc-sync matrix in
+[`docs/release-process.md`](../../../docs/release-process.md):
 
 1. Update `docs/architecture.md` diagrams/tables/invariants if behavior,
    storage, messaging, or permissions changed.
 2. Bump `<!-- release: X.Y.Z -->` in `docs/architecture.md`,
    `docs/release-process.md`, and `store/README.md`.
-3. Update `store/README.md` listing copy, permission/privacy answers, and the
-   version marker.
+3. Update `store/README.md` listing copy, permission answers, and the version
+   marker; update `docs/privacy.md` if data handling or contact details changed.
 4. Update `README.md` if the user story changed.
 5. Run `pnpm test` (release-docs checks are part of the normal test run).
 
@@ -111,7 +114,7 @@ with a different body than `CHANGELOG.md`.
 2. Update the listing from `store/README.md`; upload the five screenshots, the
    440×280 tile, the 1400×560 marquee, and the 128×128 icon.
 3. Fill Privacy practices from `store/README.md`; remote code = No; privacy
-   policy URL live.
+   policy URL (`docs/privacy.md`) live.
 4. Paste the reviewer steps; confirm distribution and submit.
 5. Report the review state.
 
