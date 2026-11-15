@@ -10,7 +10,7 @@ A simple yet powerful Chrome extension that allows you to customize website (bro
 - **Text icons** - up to 2 characters, auto-fitted to the icon
 - **Emoji icons** - pick any emoji
 - **Icon library** - search icons from lucide and use them as SVG icons
-- **Image upload** - PNG / JPG / WebP / GIF / SVG, resized to a square icon
+- **Image upload** - PNG / JPG / WebP / GIF / SVG; fill the icon (crop) or fit the whole image
 - **Rounded tile style** - consistent white rounded background for all icon types
 - **Per-page icons** - matches `host + pathname`, applied automatically on page load
 - **Restore in place** - `Reset` puts the site's original favicon back without reloading

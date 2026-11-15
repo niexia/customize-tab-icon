@@ -3,8 +3,8 @@ export interface IconConfig {
   padding?: number;
 }
 
-const DEFAULT_SIZE = 32;
-const DEFAULT_PADDING = 4;
+const DEFAULT_SIZE = 128;
+const DEFAULT_PADDING = 16;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const EMOJI_FONT =
   '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", system-ui, sans-serif';
@@ -190,13 +190,24 @@ export function generateSvgDataUrl(svgElement: SVGElement, config: IconConfig = 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
 }
 
+export type ImageFit = 'cover' | 'contain';
+
 /**
- * Crop/letterbox an uploaded image into a rounded white tile.
+ * Turn an uploaded image into a rounded icon.
+ *
+ * - `cover` (default): scale to fill the icon and crop the overflow, so no
+ *   white bars are visible.
+ * - `contain`: show the whole image, letterboxed on a white tile.
+ *
  * Rejects (instead of hanging) when the file cannot be read.
  */
-export function resizeImageToDataUrl(file: File, config: IconConfig = {}): Promise<string> {
+export function resizeImageToDataUrl(
+  file: File,
+  config: IconConfig = {},
+  fit: ImageFit = 'cover',
+): Promise<string> {
   const size = config.size ?? DEFAULT_SIZE;
-  const padding = config.padding ?? DEFAULT_PADDING;
+  const padding = fit === 'contain' ? (config.padding ?? DEFAULT_PADDING) : 0;
 
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {
@@ -225,12 +236,18 @@ export function resizeImageToDataUrl(file: File, config: IconConfig = {}): Promi
         }
 
         ctx.clearRect(0, 0, size, size);
-        drawRoundedBackground(ctx, size);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Preserve the aspect ratio and center the image inside the tile.
-        const scale = Math.min(available / image.width, available / image.height);
+        if (fit === 'contain') {
+          drawRoundedBackground(ctx, size);
+        }
+
+        // cover: fill the icon and crop; contain: show the full image.
+        const scale =
+          fit === 'cover'
+            ? Math.max(size / image.width, size / image.height)
+            : Math.min(available / image.width, available / image.height);
         const drawWidth = image.width * scale;
         const drawHeight = image.height * scale;
         const x = (size - drawWidth) / 2;

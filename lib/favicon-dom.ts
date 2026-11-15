@@ -109,11 +109,13 @@ function defaultFaviconUrl(doc: Document): string | null {
   }
 }
 
-function describeIcon(icon: string): { type: string; sizes: string } {
+function describeIcon(icon: string): { type: string; sizes: string | null } {
   if (icon.startsWith('data:image/svg+xml')) {
     return { type: 'image/svg+xml', sizes: 'any' };
   }
-  return { type: 'image/png', sizes: '32x32' };
+  // Icons can be 32px (older saved icons) or 128px (new ones). Don't claim a
+  // fixed size, otherwise Chrome may pick the wrong one.
+  return { type: 'image/png', sizes: null };
 }
 
 function isUsableOriginal(originalIcon: string | null | undefined, icon: string): string | null {
@@ -177,7 +179,7 @@ export function setFavicon(
     }
 
     link.setAttribute('type', type);
-    link.setAttribute('sizes', sizes);
+    setOrRemoveAttribute(link, 'sizes', sizes);
     link.setAttribute('href', icon);
     return;
   }
@@ -195,7 +197,7 @@ export function setFavicon(
     }
 
     link.setAttribute('type', type);
-    link.setAttribute('sizes', sizes);
+    setOrRemoveAttribute(link, 'sizes', sizes);
     link.removeAttribute('media');
     link.setAttribute('href', icon);
   }

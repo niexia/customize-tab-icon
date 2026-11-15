@@ -35,7 +35,7 @@ describe('favicon-dom', () => {
 
     expect(link.getAttribute('href')).toBe(PNG_ICON);
     expect(link.getAttribute('type')).toBe('image/png');
-    expect(link.getAttribute('sizes')).toBe('32x32');
+    expect(link.hasAttribute('sizes')).toBe(false);
 
     clearFavicon();
 

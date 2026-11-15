@@ -1,7 +1,7 @@
 import { Image } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { actionItemClass } from '@/lib/styles';
-import { resizeImageToDataUrl } from '@/lib/icon-image';
+import { resizeImageToDataUrl, type ImageFit } from '@/lib/icon-image';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -16,6 +16,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fit, setFit] = useState<ImageFit>('cover');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -25,6 +26,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
       setFileName('');
       setError(null);
       setBusy(false);
+      setFit('cover');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -40,7 +42,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
     setError(null);
 
     try {
-      const resizedDataUrl = await resizeImageToDataUrl(file);
+      const resizedDataUrl = await resizeImageToDataUrl(file, {}, fit);
       onIconChange(resizedDataUrl);
       setOpen(false);
     } catch (submitError) {
@@ -80,6 +82,15 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
           <p className="text-xs text-muted-foreground">
             {fileName || 'PNG, JPG, WebP or SVG, up to 5 MB.'}
           </p>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              className="size-4 accent-primary"
+              checked={fit === 'contain'}
+              onChange={(event) => setFit(event.target.checked ? 'contain' : 'cover')}
+            />
+            Fit whole image (adds background instead of cropping)
+          </label>
           {error ? (
             <p role="alert" className="text-xs text-destructive">
               {error}
