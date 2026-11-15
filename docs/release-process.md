@@ -177,10 +177,11 @@ build, and no remote code is bundled.
 ```bash
 git add -A
 git commit -m "chore(release): v1.1.0"
-git tag v1.1.0
+git tag -a v1.1.0 -m "v1.1.0"
 git push origin main --follow-tags
 ```
 
+Use an annotated tag: `git push --follow-tags` does not push lightweight tags.
 The tag triggers [`.github/workflows/release.yml`](../.github/workflows/release.yml):
 
 1. checkout with full history and tags;

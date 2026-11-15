@@ -97,11 +97,12 @@ Only after the user confirms publication:
 ```bash
 git add -A
 git commit -m "chore(release): vX.Y.Z"
-git tag vX.Y.Z
+git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin main --follow-tags
 ```
 
-The tag triggers `.github/workflows/release.yml` (checks, zip, GitHub Release).
+Use an annotated tag; `--follow-tags` does not push lightweight tags. The tag
+triggers `.github/workflows/release.yml` (checks, zip, GitHub Release).
 Verify the workflow and the attached zip. Do not create a GitHub Release by hand
 with a different body than `CHANGELOG.md`.
 
