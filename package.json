@@ -25,11 +25,10 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm compile && pnpm lint && pnpm test && pnpm build && pnpm docs:check",
+    "check": "pnpm compile && pnpm lint && pnpm test && pnpm build",
     "postinstall": "wxt prepare",
     "store:assets": "pnpm build && node scripts/store/build-assets.mjs",
-    "changelog": "node scripts/changelog.mjs --write",
-    "docs:check": "node scripts/docs-check.mjs"
+    "changelog": "changelogen --bump"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -57,6 +56,7 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "@wxt-dev/module-react": "^1.1.2",
+    "changelogen": "0.6.2",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",

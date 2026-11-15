@@ -1,6 +1,10 @@
 # 2026-11-15 — release, store, and documentation pipeline
 
-- **Status:** implemented
+- **Status:** superseded by [2026-11-15 simplify the store kit and tooling](2026-11-15-simplify-store-and-tooling.md)
+
+> The store kit is now a single `store/README.md`; changelog generation uses
+> `changelogen`; the docs checks run in Vitest instead of `scripts/docs-check.mjs`.
+> This note is kept as the original design record.
 - **Context:** v1.1.0 adds whole-site icons, icon backgrounds, image fit, and
   original-favicon preservation. The Chrome Web Store listing still had no
   stored assets in the repo, no changelog, and the only architecture diagram
@@ -100,7 +104,7 @@ dimensions and alpha channels; the regeneration command is documented.
 ## Follow-ups
 
 1. **Privacy policy URL:** move from the GitHub blob URL to GitHub Pages (or a
-   project site) before submission if possible. Update `store/listing.md` and the
+   project site) before submission if possible. Update `store/README.md` and the
    dashboard.
 2. **CWS API v2:** upgrade WXT to ≥ 0.21.5 (Node 22 is now the baseline), re-run
    `wxt submit init`, add service-account secrets, and add a gated submit step.

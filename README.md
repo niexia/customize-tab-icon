@@ -113,8 +113,8 @@ The full design, storage schema, and sequence diagrams are in
 The content script only reads and rewrites `<link rel="icon">` elements. It does
 not read page text, form values, cookies, or network requests. The extension has
 no server and makes no requests. See
-[`store/permissions.md`](store/permissions.md) and
-[`store/privacy.md`](store/privacy.md) for the store-facing details.
+[`store/README.md`](store/README.md) for the listing copy, permission
+justifications, and privacy policy.
 
 Chrome's own pages (`chrome://`), extension pages, and the Chrome Web Store
 cannot be customized because Chrome does not allow content scripts there.
@@ -131,7 +131,7 @@ pnpm build         # production build -> .output/chrome-mv3
 pnpm compile       # TypeScript
 pnpm lint          # ESLint
 pnpm test          # Vitest
-pnpm check         # compile + lint + test + build + docs:check
+pnpm check         # compile + lint + test + build
 pnpm zip           # build + zip for the store
 ```
 
@@ -148,10 +148,11 @@ extension.
 
 ## Release
 
-1. Bump the version and generate the changelog:
-   `pnpm version minor --no-git-tag-version` then
-   `pnpm changelog --version X.Y.Z --from <ref> --write`.
-2. Update the docs markers, diagrams, and store copy; run `pnpm check`.
+1. Generate the version bump and changelog with
+   [changelogen](https://github.com/unjs/changelogen): `pnpm changelog --minor`
+   (or `--patch` / `--major`). Preview with `pnpm exec changelogen`; it updates
+   `package.json` + `CHANGELOG.md` only.
+2. Update the docs markers, diagrams, and `store/README.md`; run `pnpm check`.
 3. Commit, tag `vX.Y.Z`, push the tag. The
    [release workflow](.github/workflows/release.yml) runs checks, zips, and
    attaches the archive to the GitHub Release.
@@ -167,9 +168,7 @@ The full checklist, changelog options, and rollback steps are in
 | --- | --- |
 | [`docs/architecture.md`](docs/architecture.md) | Runtime topology, storage model, apply/reset/init sequences, favicon DOM state machine, migrations, security, limitations |
 | [`docs/release-process.md`](docs/release-process.md) | Versioning, changelog, checks, tagging, GitHub Release, store submission, rollback |
-| [`store/README.md`](store/README.md) | Store kit, asset specs, regeneration pipeline |
-| [`store/listing.md`](store/listing.md) | Ready-to-paste listing copy |
-| [`store/checklist.md`](store/checklist.md) | Submission checklist |
+| [`store/README.md`](store/README.md) | Store kit: listing copy, assets, permissions/privacy, reviewer steps, checklist, privacy policy |
 | [`AGENTS.md`](AGENTS.md) | Agent operating manual and invariants |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release history |
 

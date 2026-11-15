@@ -485,8 +485,8 @@ message router.
 
 The broad host permission is the main review-sensitive surface. The extension
 does not read page text, form values, cookies, or network requests. See
-[`store/permissions.md`](../store/permissions.md) for the exact dashboard
-justifications.
+[`store/README.md`](../store/README.md#permissions-and-privacy-practices) for the
+exact dashboard justifications.
 
 ### Known limitations
 
@@ -513,7 +513,7 @@ flowchart LR
   MV3 --> ZIP[".output/changicon-X.Y.Z-chrome.zip"]
   MV3 --> DEMO["Store asset harness<br/>mock chrome API + headless Chrome"]
   DEMO --> ASSETS["store/assets + docs/screenshots"]
-  SRC --> CI["CI: compile · lint · test · build · docs:check"]
+  SRC --> CI["CI: compile · lint · test · build"]
   ZIP --> GH["GitHub Release on v* tag"]
   ZIP --> CWS["Chrome Web Store upload"]
   ASSETS --> CWS
@@ -525,8 +525,9 @@ flowchart LR
 - The manifest version comes from `package.json`; never edit the built manifest.
 - `store:assets` rebuilds the popup, mounts it in a mock extension environment,
   and captures the real UI with headless Chrome (see section 11).
-- `docs:check` runs in `pnpm check` and in CI. It fails when the docs release
-  marker, the changelog entry, or a store asset is out of date.
+- `scripts/release-docs.test.ts` runs in `pnpm test` (and therefore `pnpm check`
+  and CI). It fails when the docs release marker, the changelog entry, or a store
+  asset is out of date.
 - The GitHub release workflow runs on `v*` tags: checks, zip, GitHub Release
   with the zip attached. Chrome Web Store submission is manual in 2026 because
   the legacy v1.1 API used by WXT 0.20 is retired; see
@@ -565,4 +566,4 @@ does not simulate the content script or the Chrome Web Store.
 6. **Site scope is the registrable domain.** Update the suffix list and tests
    together.
 7. **Every release updates docs.** The `<!-- release: -->` marker and changelog
-   entry are checked by `pnpm docs:check`.
+   entry are checked by the release-docs test in `pnpm test`.

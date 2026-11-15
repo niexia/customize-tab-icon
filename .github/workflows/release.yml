@@ -40,9 +40,6 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Documentation gate
-        run: pnpm docs:check
-
       - name: Check tag matches package version
         run: |
           VERSION="$(node -p "require('./package.json').version")"
@@ -58,8 +55,8 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           awk -v v="$VERSION" '
-            index($0, "## [" v "]") == 1 { found = 1; next }
-            found && /^## \[/ { exit }
+            index($0, "## [" v "]") == 1 || index($0, "## " v) == 1 { found = 1; next }
+            found && /^## / { exit }
             found
           ' CHANGELOG.md > release-notes.md
           if [ ! -s release-notes.md ]; then

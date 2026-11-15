@@ -9,13 +9,15 @@ files in this directory.
 1. **Behavior changes first.** If a change touches storage, messaging, the
    favicon DOM, scope/precedence, permissions, or the release pipeline, update
    `architecture.md` before touching store copy.
-2. **Update the marker.** Bump `<!-- release: X.Y.Z -->` in `architecture.md` and
-   `release-process.md` when preparing a release, after verifying the content.
+2. **Update the marker.** Bump `<!-- release: X.Y.Z -->` in `architecture.md`, `release-process.md`, and
+   `../store/README.md` when preparing a release, after verifying the content.
 3. **Keep diagrams truthful.** Edit the Mermaid source in place. Do not replace a
    diagram with a screenshot of a diagram.
 4. **Do not rename linked sections** without updating every link in `README.md`,
    `docs/README.md`, `store/`, and `.agents/skills/`.
-5. **Run `pnpm docs:check`** after changes. It is also part of `pnpm check` and CI.
+5. **Run `pnpm test`** after changes. The release-docs test is part of `pnpm test`
+   and CI; use `pnpm exec vitest run scripts/release-docs.test.ts` for the fast
+   loop.
 
 ## Diagram conventions
 

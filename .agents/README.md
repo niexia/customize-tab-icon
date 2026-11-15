@@ -60,16 +60,17 @@ step. No restart or plugin install is required.
    it is the only text the model sees before loading the body.
 5. Do not put secrets or machine-specific absolute paths in a skill.
 
-## Skills are guidance; scripts and CI are enforcement
+## Skills are guidance; tests and CI are enforcement
 
 A skill is loaded on demand and can be skipped. The guarantees come from:
 
-- `pnpm check` (compile/lint/test/build/docs:check);
+- `pnpm check` (compile/lint/test/build); `pnpm test` includes the release-docs
+  checks for markers, changelog, and store assets;
 - the release workflow on `v*` tags;
-- the exact-size asset and docs markers verified by `scripts/docs-check.mjs`;
-- the changelog generator reading real commits.
+- `changelogen` reading Conventional Commits and the latest tag;
+- the release-docs test in `scripts/release-docs.test.ts`.
 
-Write skills so that following them produces the same result as the scripts.
+Write skills so that following them produces the same result as the tests.
 
 ## Compatibility with other agents
 

@@ -41,10 +41,9 @@ pnpm zip                 # build + zip → .output/changicon-<version>-chrome.zi
 pnpm compile             # tsc --noEmit
 pnpm lint                # ESLint
 pnpm test                # Vitest
-pnpm check               # compile + lint + test + build + docs:check
-pnpm changelog --version X.Y.Z --from <ref> --write
-pnpm docs:check          # docs markers, changelog, store asset dimensions
-pnpm store:assets        # rebuild + capture store/README images (local Chrome)
+pnpm check               # compile + lint + test + build
+pnpm changelog --minor   # changelogen: bump + prepend CHANGELOG entry
+pnpm store:assets        # rebuild + capture store assets and README images
 ```
 
 `pnpm check` is the definition of done for code changes. It must pass before a
@@ -69,12 +68,14 @@ commit that changes runtime behavior.
    it makes Chrome keep the custom image.
 7. **Site scope is the registrable domain**, not the exact host. The suffix list
    in `lib/icon-key.ts` is deliberate; update tests with it.
-8. **Permissions are reviewed.** Do not add a permission without updating
-   `store/permissions.md`, `store/privacy.md`, and the manifest rationale.
+8. **Permissions are reviewed.** Do not add a permission without updating the
+   permission justifications and privacy policy in `store/README.md` and the
+   manifest rationale.
 9. **No tracking.** No analytics, telemetry, crash reporting, ads, or data sale.
-10. **Every release updates docs.** `docs/architecture.md` and
-    `docs/release-process.md` carry a `<!-- release: X.Y.Z -->` marker; the
-    changelog must have the matching entry. `pnpm docs:check` enforces both.
+10. **Every release updates docs.** `docs/architecture.md`,
+    `docs/release-process.md`, and `store/README.md` carry a
+    `<!-- release: X.Y.Z -->` marker; the changelog must have the matching entry.
+    The release-docs test in `pnpm test` enforces all three.
 
 ## Where things live
 
@@ -90,7 +91,7 @@ commit that changes runtime behavior.
 | `components/` | Popup UI, providers, pickers |
 | `docs/` | Architecture, release process, agent docs |
 | `store/` | Chrome Web Store copy and exact-size assets |
-| `scripts/` | Changelog, docs check, store screenshot harness |
+| `scripts/` | Release-docs test and the store screenshot harness |
 | `.agents/skills/` | Auto-discovered agent skills |
 | `.github/workflows/` | CI and tag-triggered release |
 
@@ -105,7 +106,7 @@ commit that changes runtime behavior.
 - Preserve the typed messaging protocol; add a message type rather than
   bypassing `lib/messaging.ts`.
 - Do not change `wxt.config.ts` permissions or the content-script match without
-  an explicit request and the store/privacy updates.
+  an explicit request and the permission/privacy updates in `store/README.md`.
 
 ### Docs
 
@@ -119,7 +120,7 @@ commit that changes runtime behavior.
 
 - Run `pnpm store:assets`; do not hand-edit screenshots.
 - The five screenshots must be 1280×800, opaque PNGs. The promo tiles are
-  440×280 and 1400×560. `pnpm docs:check` verifies dimensions and alpha.
+  440×280 and 1400×560. The release-docs test verifies dimensions and alpha.
 - The native `<input type="file">` follows the host OS language; keep English
   screenshots on an English-locale machine or use the text-badge shot. Do not
   retouch the control.
@@ -129,8 +130,8 @@ commit that changes runtime behavior.
 Full detail: [`docs/release-process.md`](docs/release-process.md). Short form:
 
 ```bash
-pnpm version minor --no-git-tag-version       # or patch/major
-pnpm changelog --version X.Y.Z --from <last-ref> --write
+pnpm changelog --minor                         # or without a flag to infer semver
+# changelogen updates package.json + CHANGELOG.md; it does not tag or push
 # update docs markers + diagrams + store copy/assets
 pnpm check
 pnpm zip
@@ -160,7 +161,7 @@ git push origin main --follow-tags
 | Popup UI | `pnpm check` + screenshot review (`pnpm store:assets`) |
 | Content script / favicon DOM | `pnpm test` + manual check on a real page: apply, reload, reset |
 | Permissions / manifest | `pnpm build`, inspect `.output/chrome-mv3/manifest.json`, update store docs |
-| Docs only | `pnpm docs:check` |
+| Docs only | `pnpm test` (or `pnpm exec vitest run scripts/release-docs.test.ts`) |
 | Release | `pnpm check`, zip smoke test, dashboard preview |
 
 Manual smoke test (load `.output/chrome-mv3` unpacked):
