@@ -48,7 +48,7 @@ pnpm store:assets
 
 Requirements:
 
-- Node 20+.
+- Node 22+.
 - A local Google Chrome/Chromium. The script finds the macOS app path
   automatically; elsewhere set `CHROME_PATH=/path/to/chrome`.
 - No network access is required; everything is served from `127.0.0.1`.

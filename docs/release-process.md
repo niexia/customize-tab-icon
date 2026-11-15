@@ -242,8 +242,8 @@ permissions. Do not resubmit duplicate packages while a review is pending.
 ### Future: API v2 automation
 
 WXT ≥ 0.21.5 uses `publish-browser-extension` v6 and supports the Chrome Web
-Store **API v2** with a service account. That upgrade also requires Node 22
-(`.nvmrc`) and a fresh `wxt submit init` that writes `CHROME_API_VERSION=v2`.
+Store **API v2** with a service account. Node 22 is already the project baseline; the upgrade also needs a fresh
+`wxt submit init` that writes `CHROME_API_VERSION=v2`.
 The eventual workflow is:
 
 ```bash

@@ -121,7 +121,7 @@ cannot be customized because Chrome does not allow content scripts there.
 
 ## Development
 
-Prerequisites: Node.js 20+ (see `.nvmrc`) and pnpm (version pinned in
+Prerequisites: Node.js 22+ (see `.nvmrc`) and pnpm (version pinned in
 `package.json`).
 
 ```bash

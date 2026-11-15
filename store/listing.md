@@ -33,40 +33,40 @@ dashboard.
 ### Detailed description
 
 Plain text (the dashboard does not render Markdown). Paste the block below.
-Length: **1,844 / 16,000** characters.
+Length: **1,862 / 16,000** characters.
 
 ```text
-Changicon lets you replace the favicon of any web page with an icon you choose, so every tab is easy to recognize at a glance.
+Changicon lets you replace the favicon of any web page with a graphic you choose, so every tab is easy to recognize at a glance.
 
 Pick what fits the page:
 • Emoji — search the full emoji library and use any emoji.
 • Text — up to two characters, auto-fitted into a clean badge.
-• Icons — browse a large Lucide icon set with instant search.
+• Library — browse a large Lucide set with instant search.
 • Images — upload a PNG, JPG, WebP, GIF, or SVG (up to 5 MB), then crop to fill or fit the whole picture.
 
 Choose where it applies:
 • This page — only the current address.
-• Whole site — every page on the domain, including subdomains. Page-specific icons still override the site icon.
+• Whole site — every page on the domain, including subdomains. Page-specific picks still override the site-wide one.
 
 Make it yours:
 • White rounded tile or transparent background.
 • Light, dark, or system theme.
 • Reset any tab to the site's original favicon without reloading.
-• "Clear all" removes every saved icon.
+• "Clear all" removes every saved glyph.
 
 Private by design:
-• Custom icons are generated on your device.
-• Settings and icons are stored locally in Chrome storage.
+• Custom artwork is generated on your device.
+• Settings and images are stored locally in Chrome storage.
 • No account, no analytics, no tracking, and no network requests.
 • The extension only changes the page's favicon link; it does not read page content.
 
 Good to know:
 • Works on regular http(s) pages. Chrome's own pages, the Chrome Web Store, and the PDF viewer can't be customized.
-• The site icon uses the domain (for example, news.example.com and example.com share one icon).
-• Icons are stored per browser profile and are not synced between devices.
+• The site-wide choice uses the domain (for example, news.example.com and example.com share one graphic).
+• Artwork is stored per browser profile and is not synced between devices.
 
 Permissions and why they are needed:
-• storage — save your icons and preferences.
+• storage — save your artwork and preferences.
 • activeTab — read the current tab's address and favicon when you open the popup.
 • scripting — add the content script to tabs that were already open before install or update.
 • Access to websites — required to replace the favicon on any page you choose.
@@ -76,7 +76,7 @@ Changicon is open source under the MIT license. Source, issues, and the privacy 
 
 Avoid adding HTML, repeated keywords, or unverifiable claims. The store policy
 treats a keyword repeated more than five times as keyword spam; the copy above
-uses "favicon" five times and no other term excessively.
+uses "favicon" five times and leans on synonyms for the rest.
 
 ---
 

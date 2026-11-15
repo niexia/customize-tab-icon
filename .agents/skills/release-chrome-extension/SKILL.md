@@ -18,7 +18,7 @@ repository [`AGENTS.md`](../../../AGENTS.md) first, then
   included in the release commit.
 - You know the target version (default: derive from the commits since the last
   tag). The current published baseline is `v1.1.0`; a new tag must be greater.
-- Node 20+ and pnpm are available. The Chrome Web Store submission needs a
+- Node 22+ and pnpm are available. The Chrome Web Store submission needs a
   browser and dashboard access; the agent may not be able to complete it.
 
 ## Steps

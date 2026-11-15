@@ -34,7 +34,7 @@ Run this before every submission. It assumes the repository release steps in
 
 - [ ] Title: `Changicon` (from the manifest; 9/75 characters).
 - [ ] Summary: 110/132 characters, matches the manifest `description` in `wxt.config.ts` and `store/listing.md`.
-- [ ] Description: 1,844/16,000 characters, plain text, no HTML.
+- [ ] Description: 1,862/16,000 characters, plain text, no HTML.
 - [ ] Category: **Tools**.
 - [ ] Language: **English**.
 - [ ] Official URL: empty.

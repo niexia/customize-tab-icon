@@ -102,7 +102,7 @@ dimensions and alpha channels; the regeneration command is documented.
 1. **Privacy policy URL:** move from the GitHub blob URL to GitHub Pages (or a
    project site) before submission if possible. Update `store/listing.md` and the
    dashboard.
-2. **CWS API v2:** upgrade WXT to ≥ 0.21.5, bump `.nvmrc` to 22, re-run
+2. **CWS API v2:** upgrade WXT to ≥ 0.21.5 (Node 22 is now the baseline), re-run
    `wxt submit init`, add service-account secrets, and add a gated submit step.
 3. **Localization:** decide whether to add a `zh_CN` listing and `_locales/`
    messages; do not ship an English UI with a Chinese listing without saying so.
