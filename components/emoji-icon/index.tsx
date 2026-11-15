@@ -1,12 +1,14 @@
-import { Smile } from "lucide-react";
-import { ActionItem } from "../action-item";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import Picker from "@emoji-mart/react"
-import data from "@emoji-mart/data"
-import { useState } from "react";
-import { usePopupHeight } from "@/hooks/usePopupHeight";
-import styles from "./index.module.css";
-import { generateEmojiDataUrl } from "@/lib/utils";
+import { Smile } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { usePopupHeight } from '@/hooks/usePopupHeight';
+import { actionItemClass } from '@/lib/styles';
+import { generateEmojiDataUrl } from '@/lib/icon-image';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Loader } from '../base/loader';
+import styles from './index.module.css';
+
+// The emoji data + picker are large; only download them when the panel opens.
+const EmojiPicker = lazy(() => import('./picker'));
 
 interface EmojiIconProps {
   onIconChange: (icon?: string) => void;
@@ -14,35 +16,36 @@ interface EmojiIconProps {
 
 export function EmojiIcon({ onIconChange }: EmojiIconProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
-  
-  // 使用自定义hook来管理popup高度
-  usePopupHeight(popoverOpen, '600px');
-  
-  const handleEmojiSelect = (emoji: any) => {
-    const emojiDataUrl = generateEmojiDataUrl(emoji.native);
+
+  usePopupHeight(popoverOpen);
+
+  const handleEmojiSelect = (emoji: string) => {
+    const emojiDataUrl = generateEmojiDataUrl(emoji);
+    if (!emojiDataUrl) return;
+
     onIconChange(emojiDataUrl);
     setPopoverOpen(false);
   };
-  
+
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <PopoverTrigger className="w-full">
-        <ActionItem>
-          <Smile size={20} />
-          <span className="font-medium">Emoji</span>
-        </ActionItem>
+      <PopoverTrigger className={actionItemClass}>
+        <Smile size={20} aria-hidden="true" />
+        <span>Emoji</span>
       </PopoverTrigger>
       <PopoverContent className="p-0">
         <div className={styles.emojiPickerWrapper}>
-          <Picker
-            data={data} 
-            previewPosition="none" 
-            onEmojiSelect={handleEmojiSelect}
-            emojiButtonSize={32}
-            perLine={9}
-          />
+          <Suspense
+            fallback={
+              <div className="flex h-[354px] w-[288px] items-center justify-center">
+                <Loader className="h-6 w-6" />
+              </div>
+            }
+          >
+            <EmojiPicker onSelect={handleEmojiSelect} />
+          </Suspense>
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

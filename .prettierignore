@@ -1,0 +1,6 @@
+node_modules
+.output
+.wxt
+docs
+pnpm-lock.yaml
+public/icon

@@ -1,11 +1,11 @@
-import { Image } from "lucide-react";
-import { ActionItem } from "./action-item";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { useState, useEffect, useRef } from "react";
-import { Button } from "./ui/button";
-import { log, resizeImageToDataUrl } from "@/lib/utils";
+import { Image } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { actionItemClass } from '@/lib/styles';
+import { resizeImageToDataUrl } from '@/lib/icon-image';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
 
 interface UploadIconProps {
   onIconChange: (icon?: string) => void;
@@ -13,45 +13,82 @@ interface UploadIconProps {
 
 export function UploadIcon({ onIconChange }: UploadIconProps) {
   const [open, setOpen] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      setFileName('');
+      setError(null);
+      setBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async () => {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
+      setError('Choose an image first.');
       return;
     }
+
+    setBusy(true);
+    setError(null);
 
     try {
       const resizedDataUrl = await resizeImageToDataUrl(file);
       onIconChange(resizedDataUrl);
       setOpen(false);
-    } catch (error) {
-      log('error', 'Error processing image:', error);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Could not process this image.');
+    } finally {
+      setBusy(false);
     }
   };
 
-  useEffect(() => {
-    if (!open && fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [open]);
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="w-full">
-        <ActionItem>
-          <Image size={20} />
-          <span className="font-medium">Upload</span>
-        </ActionItem>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger className={actionItemClass}>
+        <Image size={20} aria-hidden="true" />
+        <span>Upload</span>
       </PopoverTrigger>
-      <PopoverContent className="space-y-4">
-        <div className="grid w-full lg:max-w-sm items-center gap-1.5">
-          <Label htmlFor="picture">Picture</Label>
-          <Input id="picture" type="file" ref={fileInputRef} accept="image/*" />
-        </div>
-        <Button className="w-full" onClick={handleSubmit}>
-          Confirm
-        </Button>
+      <PopoverContent>
+        <form
+          className="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="picture">Picture</Label>
+            <Input
+              id="picture"
+              type="file"
+              ref={fileInputRef}
+              accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+              onChange={(event) => {
+                setFileName(event.target.files?.[0]?.name ?? '');
+                setError(null);
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {fileName || 'PNG, JPG, WebP or SVG, up to 5 MB.'}
+          </p>
+          {error ? (
+            <p role="alert" className="text-xs text-destructive">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" className="w-full" disabled={!fileName || busy}>
+            {busy ? 'Processing...' : 'Confirm'}
+          </Button>
+        </form>
       </PopoverContent>
     </Popover>
   );

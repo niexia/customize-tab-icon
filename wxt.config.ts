@@ -6,7 +6,9 @@ export default defineConfig({
   browser: 'chrome',
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    permissions: ['storage', 'tabs',]
+    name: 'Changicon',
+    description: 'An extension that allows you to customize website icons (tab icons).',
+    permissions: ['storage', 'activeTab', 'scripting'],
   },
   vite: () => ({
     plugins: [tailwindcss()],

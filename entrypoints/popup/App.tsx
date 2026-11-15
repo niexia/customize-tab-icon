@@ -1,112 +1,183 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Header } from '@/components/header';
 import { IconDisplay } from '@/components/icon-display';
 import { SettingIcon } from '@/components/setting-icon';
-import { AboutProduct } from '@/components/about-product';
 import { Contact } from '@/components/contact';
 import { sendMessage } from '@/lib/messaging';
-import { changiconLocal } from '@/lib/store';
+import {
+  clearAllIcons,
+  getPageIcon,
+  migrateLegacyIcons,
+  removePageIcon,
+  setPageIcon,
+} from '@/lib/icons';
+import { isSupportedUrl } from '@/lib/icon-key';
 import { log } from '@/lib/utils';
+
+/**
+ * Tabs that were already open before the extension was installed/updated do
+ * not have the declarative content script yet. Inject it on demand.
+ */
+async function injectContentScript(tabId: number): Promise<void> {
+  const files = (chrome.runtime.getManifest().content_scripts ?? []).flatMap(
+    (script) => script.js ?? [],
+  );
+
+  if (files.length === 0) {
+    throw new Error('No content script available');
+  }
+
+  if (typeof chrome.scripting?.executeScript !== 'function') {
+    throw new Error('Scripting is not available in this browser');
+  }
+
+  await chrome.scripting.executeScript({ target: { tabId }, files });
+}
+
+async function sendToTab<T>(tabId: number, send: () => Promise<T>): Promise<T> {
+  try {
+    return await send();
+  } catch {
+    await injectContentScript(tabId);
+    return await send();
+  }
+}
 
 function App() {
   const [icon, setIcon] = useState('');
-  const [tab, setTab] = useState({} as chrome.tabs.Tab);
-  const [parsedUrl, setParsedUrl] = useState({} as URL);
-  const [loadingIcon, setLoadingIcon] = useState(true);
+  const [tab, setTab] = useState<chrome.tabs.Tab | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [supported, setSupported] = useState(true);
+  const [hasCustomIcon, setHasCustomIcon] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let timeoutId: number | undefined;
-    const getTabIcon = async () => {
+    let cancelled = false;
+
+    const load = async () => {
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab?.id || !tab.url) {
-          log('log', 'No active tab found or invalid URL');
+        await migrateLegacyIcons();
+
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (cancelled) return;
+
+        if (!activeTab?.id || !activeTab.url) {
+          setSupported(false);
+          setError('No active tab found.');
           return;
         }
-        setTab(tab);
-        setParsedUrl(new URL(tab.url))
-        setIcon(tab.favIconUrl ?? '')
-        const { host, pathname } = parsedUrl;
-        const storedIcons = await changiconLocal.getValue();
-        const storeIcon = storedIcons[host]?.[pathname];
-        if (storeIcon) {
-          setIcon(storeIcon.customIcon);
+
+        setTab(activeTab);
+
+        if (!isSupportedUrl(activeTab.url)) {
+          setSupported(false);
+          return;
+        }
+
+        const customIcon = await getPageIcon(activeTab.url);
+        if (cancelled) return;
+
+        setHasCustomIcon(Boolean(customIcon));
+        setIcon(customIcon ?? activeTab.favIconUrl ?? '');
+      } catch (loadError) {
+        log('error', 'Failed to load the current tab', loadError);
+        if (!cancelled) {
+          setSupported(false);
+          setError('Could not read the current tab.');
         }
       } finally {
-        timeoutId = window.setTimeout(() => {
-          setLoadingIcon(false);
-        }, 200);
+        if (!cancelled) setLoading(false);
       }
-    }
-    getTabIcon();
+    };
+
+    void load();
+
     return () => {
-      clearTimeout(timeoutId)
-    }
+      cancelled = true;
+    };
   }, []);
 
-  const changeIcon = async (val?: string) => {
-    if (!val || !tab?.id || !tab.url) {
-      log('log', 'No valid icon to set or invalid tab');
-      return;
-    }
+  const applyIcon = useCallback(
+    async (value?: string) => {
+      if (!value || !tab?.id || !tab.url || !supported) return;
+
+      try {
+        // Persist first so the content script (or a freshly injected one)
+        // picks the icon up when it initializes.
+        await setPageIcon(tab.url, value);
+        await sendToTab(tab.id, () => sendMessage('setWebsiteIcon', value, tab.id));
+
+        setIcon(value);
+        setHasCustomIcon(true);
+        setError(null);
+      } catch (applyError) {
+        await removePageIcon(tab.url).catch(() => undefined);
+        log('error', 'Failed to apply the icon', applyError);
+        setError('Could not apply the icon to this page. Try refreshing it and retry.');
+      }
+    },
+    [supported, tab],
+  );
+
+  const resetIcon = useCallback(async () => {
+    if (!tab?.id || !tab.url || !supported) return;
 
     try {
-      const { host, pathname } = parsedUrl;
-      const storedIcons = await changiconLocal.getValue();
+      await removePageIcon(tab.url);
+      const originalIcon = await sendToTab(tab.id, () =>
+        sendMessage('clearWebsiteIcon', undefined, tab.id),
+      );
 
-      await changiconLocal.setValue({
-        ...storedIcons,
-        [host]: {
-          ...storedIcons[host],
-          [pathname]: {
-            customIcon: val
-          }
-        }
-      });
-
-      await sendMessage('setWebsiteIcon', val, tab.id);
-      setIcon(val);
-    } catch (error) {
-      log('error', 'Failed to update icon:', error);
+      setIcon(originalIcon ?? tab.favIconUrl ?? '');
+      setHasCustomIcon(false);
+      setError(null);
+    } catch (resetError) {
+      log('error', 'Failed to reset the icon', resetError);
+      setError('The saved icon was removed, but the page was not updated. Refresh it to finish.');
     }
-  };
+  }, [supported, tab]);
 
-  const resetIcon = async () => {
-    if (!tab?.id || !tab.url) {
-      log('log', 'No valid tab to reset icon');
-      return;
-    }
-
+  const clearAll = useCallback(async () => {
     try {
-      const { host, pathname } = parsedUrl;
-      const storedIcons = await changiconLocal.getValue();
-      
-      await changiconLocal.setValue({
-        ...storedIcons,
-        [host]: {
-          ...storedIcons[host],
-          [pathname]: {
-            customIcon: ''
-          }
-        }
-      });
-      
-      await chrome.tabs.reload(tab.id);
-      setIcon(tab.favIconUrl ?? '');
-    } catch (error) {
-      log('error', 'Failed to reset icon:', error);
+      await clearAllIcons();
+
+      const originalIcon =
+        tab?.id && supported
+          ? await sendToTab(tab.id, () =>
+              sendMessage('clearWebsiteIcon', undefined, tab.id),
+            ).catch(() => null)
+          : null;
+
+      setHasCustomIcon(false);
+      setIcon(originalIcon ?? tab?.favIconUrl ?? '');
+      setError(null);
+    } catch (clearError) {
+      log('error', 'Failed to clear all icons', clearError);
+      setError('Could not clear the saved icons.');
     }
-  };
+  }, [supported, tab]);
+
+  const hint = supported ? 'Open a web page to get started' : "This page can't be customized";
 
   return (
-    <ThemeProvider defaultTheme='dark'>
+    <ThemeProvider>
       <Header />
-      <IconDisplay icon={icon} loading={loadingIcon} onReset={resetIcon}></IconDisplay>
-      <SettingIcon onIconChange={changeIcon}></SettingIcon>
-      {/* <AboutProduct></AboutProduct> */}
-      <Contact></Contact>
+      <IconDisplay
+        icon={icon}
+        loading={loading}
+        canReset={hasCustomIcon}
+        hint={hint}
+        onReset={resetIcon}
+      />
+      {supported ? <SettingIcon onIconChange={applyIcon} /> : null}
+      {error ? (
+        <p role="alert" className="px-4 pb-2 text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <Contact onClearAll={clearAll} />
     </ThemeProvider>
   );
 }

@@ -539,15 +539,6 @@ export default {
   "bandage": [
     "medical"
   ],
-  "banknote-arrow-down": [
-    "finance"
-  ],
-  "banknote-arrow-up": [
-    "finance"
-  ],
-  "banknote-x": [
-    "finance"
-  ],
   "banknote": [
     "finance"
   ],
@@ -5034,12 +5025,6 @@ export default {
   "spell-check": [
     "text",
     "development"
-  ],
-  "spline-pointer": [
-    "arrows",
-    "cursors",
-    "design",
-    "tools"
   ],
   "spline": [
     "design"

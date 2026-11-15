@@ -1,31 +1,6 @@
-import { storage } from 'wxt/utils/storage'
+import { storage } from 'wxt/utils/storage';
+import type { Theme } from './theme';
 
-const changiconTheme = storage.defineItem<string>(
-  'local:changicon-theme',
-  {
-    fallback: 'system'
-  }
-);
-
-interface IconInfo {
-  customIcon: string
-}
-
-type HostIcons = Record<string, Record<string, IconInfo>>
-
-const changiconLocal = storage.defineItem<HostIcons>(
-  'local:changicon-local',
-  {
-    fallback: {}
-  }
-)
-
-const changeiconSync = storage.defineItem<HostIcons>(
-  'sync:changeicon-sync'
-)
-
-export {
-  changiconTheme,
-  changiconLocal,
-  changeiconSync,
-}
+export const changiconTheme = storage.defineItem<Theme>('local:changicon-theme', {
+  fallback: 'system',
+});

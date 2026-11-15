@@ -1,3 +1,6 @@
 node_modules
 .output
 .wxt/
+coverage
+*.tsbuildinfo
+.DS_Store

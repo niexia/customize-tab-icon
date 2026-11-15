@@ -1,4 +1,4 @@
-import { ModeToggle } from "./mode-toogle";
+import { ModeToggle } from "./mode-toggle";
 export function Header() {
   return (
     <div className="flex justify-between p-4 items-center">

@@ -1,68 +1,82 @@
 # Changicon - Website (Tab) Icon Customizer
 
-A simple yet powerful Chrome extension that allows you to customize website (browser tab) icons . Built with WXT + React + shadcn/ui + Tailwindcss.
+A simple yet powerful Chrome extension that allows you to customize website (browser tab) icons. Built with WXT + React + shadcn/ui + Tailwind CSS.
 
-<img src="./public/design.png">
-<img src="./public/showcase.png">
+<img src="./docs/design.png">
+<img src="./docs/showcase.png">
 
-## ✨ Features
-🎨 Custom Tab Icons
-- Text icons (up to 2 characters)
-- Emoji icons
-- Custom image upload
-- SVG icon support
+## Features
 
-💅 Beautiful Icon Style
-- Rounded rectangle design
-- White background
-- Perfect padding
+- **Text icons** - up to 2 characters, auto-fitted to the icon
+- **Emoji icons** - pick any emoji
+- **Icon library** - search icons from lucide and use them as SVG icons
+- **Image upload** - PNG / JPG / WebP / GIF / SVG, resized to a square icon
+- **Rounded tile style** - consistent white rounded background for all icon types
+- **Per-page icons** - matches `host + pathname`, applied automatically on page load
+- **Restore in place** - `Reset` puts the site's original favicon back without reloading
+- **Manage saved icons** - clear all saved icons from the footer
+- **Dark / light / system theme**
 
-🚀 Easy to Use
-- Click extension icon to modify
-- Real-time preview
-- Auto-save settings
+## Permissions
 
-## 🛠️ Development
+- `storage` - save the selected icons and the theme
+- `activeTab` - read the URL/favicon of the tab the popup was opened for
+- `scripting` - inject the content script into tabs that were already open before install/update
+
+Content scripts run on `http(s)` pages to apply the icon. Icons are generated locally; no remote code is loaded.
+
+## Development
 
 ### Prerequisites
 
-- Node.js >= 20
-- pnpm >= 10
+- Node.js >= 20 (see `.nvmrc`)
+- pnpm (version pinned in `package.json`)
 
-### Installation
+### Install
 
 ```bash
 pnpm install
 ```
 
-### Development Mode
+### Dev mode
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### Build
 
 ```bash
-npm run build
+pnpm build
 ```
 
-## 📦 Installation
+### Checks
 
-### Webstore
-Open the [Changeicon](https://chromewebstore.google.com/detail/changicon/pcnnpfojchdoapfnaanpibdkjbdmglhi) directly
+```bash
+pnpm compile   # TypeScript
+pnpm lint      # ESLint
+pnpm test      # Vitest
+pnpm check     # all of the above + build
+```
+
+## Installation
+
+### Web Store
+
+Open [Changicon](https://chromewebstore.google.com/detail/changicon/pcnnpfojchdoapfnaanpibdkjbdmglhi) directly.
 
 ### Manual install
-1. `npm run build`
+
+1. `pnpm build`
 2. Open Chrome Extensions page (`chrome://extensions/`)
 3. Enable "Developer mode"
 4. Click "Load unpacked"
 5. Select the `.output/chrome-mv3` directory of this project
 
-## 🤝 Contributing
+## Contributing
 
 Issues and Pull Requests are welcome!
 
-## 📝 License
+## License
 
 [MIT License](LICENSE)

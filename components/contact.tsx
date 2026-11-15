@@ -1,4 +1,5 @@
-import { Github, Twitter } from "lucide-react";
+import { Github, Trash2, Twitter } from "lucide-react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 
 type SocialLink = {
@@ -20,7 +21,13 @@ const SOCIAL_LINKS: SocialLink[] = [
   }
 ];
 
-export function Contact() {
+type ContactProps = {
+  onClearAll?: () => void;
+};
+
+export function Contact({ onClearAll }: ContactProps) {
+  const [confirmingClearAll, setConfirmingClearAll] = useState(false);
+
   const handleOpenUrl = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -39,6 +46,36 @@ export function Contact() {
           {icon}
         </Button>
       ))}
+      {onClearAll ? (
+        confirmingClearAll ? (
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setConfirmingClearAll(false);
+                onClearAll();
+              }}
+            >
+              Clear all
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmingClearAll(false)}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto hover:bg-accent hover:cursor-pointer"
+            onClick={() => setConfirmingClearAll(true)}
+            aria-label="Clear all custom icons"
+            title="Clear all custom icons"
+          >
+            <Trash2 size={20} />
+          </Button>
+        )
+      ) : null}
     </section>
   );
 }

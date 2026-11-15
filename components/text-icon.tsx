@@ -1,10 +1,10 @@
-import { Keyboard } from "lucide-react";
-import { ActionItem } from "./action-item";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { useState, useEffect } from "react";
-import { generateTextDataUrl } from "@/lib/utils";
+import { Keyboard } from 'lucide-react';
+import { useState } from 'react';
+import { actionItemClass } from '@/lib/styles';
+import { generateTextDataUrl } from '@/lib/icon-image';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 interface TextIconProps {
   onIconChange: (icon?: string) => void;
@@ -12,40 +12,47 @@ interface TextIconProps {
 
 export function TextIcon({ onIconChange }: TextIconProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) setInputValue('');
+  };
 
   const handleSubmit = () => {
-    if (!inputValue?.trim()) {
-      return;
-    }
-
     const textDataUrl = generateTextDataUrl(inputValue);
+    if (!textDataUrl) return;
+
     onIconChange(textDataUrl);
     setOpen(false);
   };
 
-  useEffect(() => {
-    setInputValue("");
-  }, [open])
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="w-full">
-        <ActionItem>
-          <Keyboard size={20} />
-          <span className="font-medium">text</span>
-        </ActionItem>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger className={actionItemClass}>
+        <Keyboard size={20} aria-hidden="true" />
+        <span>Text</span>
       </PopoverTrigger>
-      <PopoverContent className="space-y-4">
-        <Input
-          placeholder="Enter text..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          maxLength={2}
-        />
-        <Button className="w-full" onClick={handleSubmit}>
-          Confirm
-        </Button>
+      <PopoverContent>
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSubmit();
+          }}
+        >
+          <Input
+            aria-label="Icon text"
+            placeholder="Enter up to 2 characters"
+            value={inputValue}
+            onChange={(event) => setInputValue(event.target.value)}
+            maxLength={2}
+            autoFocus
+          />
+          <Button type="submit" className="w-full" disabled={!inputValue.trim()}>
+            Confirm
+          </Button>
+        </form>
       </PopoverContent>
     </Popover>
   );
