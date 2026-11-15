@@ -12,6 +12,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const EMOJI_FONT =
   '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", system-ui, sans-serif';
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const TRANSPARENT_FILL_RATIO = 0.94;
 
 function createCanvas(size: number): {
   canvas: HTMLCanvasElement;
@@ -65,6 +66,52 @@ function textMetricsY(
 }
 
 /**
+ * Draw text/emoji using its actual ink bounds, so transparent icons fill the
+ * canvas instead of carrying the padding that is only needed on a white tile.
+ */
+function drawFittedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  size: number,
+  font: string,
+  fillRatio: number,
+): void {
+  ctx.save();
+  ctx.font = font;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  const metrics = ctx.measureText(text);
+  const left = metrics.actualBoundingBoxLeft || 0;
+  const right = metrics.actualBoundingBoxRight || metrics.width || 0;
+  const ascent = metrics.actualBoundingBoxAscent || 0;
+  const descent = metrics.actualBoundingBoxDescent || 0;
+  const inkWidth = left + right;
+  const inkHeight = ascent + descent;
+
+  if (inkWidth <= 0 || inkHeight <= 0) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, size / 2, size / 2);
+    ctx.restore();
+    return;
+  }
+
+  const scale = Math.min(
+    (size * fillRatio) / inkWidth,
+    (size * fillRatio) / inkHeight,
+  );
+  const inkCenterX = (right - left) / 2;
+  const inkCenterY = (descent - ascent) / 2;
+
+  ctx.translate(size / 2, size / 2);
+  ctx.scale(scale, scale);
+  ctx.translate(-inkCenterX, -inkCenterY);
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+}
+
+/**
  * Generate a rounded white tile with up to two characters.
  * The font size is auto-fitted so short text fills the icon.
  */
@@ -82,8 +129,23 @@ export function generateTextDataUrl(text: string, config: IconConfig = {}): stri
   const available = size - padding * 2;
 
   ctx.clearRect(0, 0, size, size);
-  if ((config.background ?? 'white') === 'white') {
+  const background = config.background ?? 'white';
+
+  if (background === 'white') {
     drawRoundedBackground(ctx, size);
+  }
+
+  ctx.fillStyle = '#000';
+
+  if (background === 'transparent') {
+    drawFittedText(
+      ctx,
+      displayText,
+      size,
+      `600 ${size}px ${EMOJI_FONT}`,
+      TRANSPARENT_FILL_RATIO,
+    );
+    return canvas.toDataURL('image/png');
   }
 
   let fontSize = Math.max(6, Math.floor(available));
@@ -101,7 +163,6 @@ export function generateTextDataUrl(text: string, config: IconConfig = {}): stri
   }
 
   ctx.font = `600 ${fontSize}px ${EMOJI_FONT}`;
-  ctx.fillStyle = '#000';
   ctx.fillText(displayText, size / 2, textMetricsY(ctx, displayText, size / 2, fontSize));
 
   return canvas.toDataURL('image/png');
@@ -124,12 +185,21 @@ export function generateEmojiDataUrl(emoji: string, config: IconConfig = {}): st
   const available = size - padding * 2;
 
   ctx.clearRect(0, 0, size, size);
-  if ((config.background ?? 'white') === 'white') {
+  const background = config.background ?? 'white';
+
+  if (background === 'white') {
     drawRoundedBackground(ctx, size);
   }
+
+  ctx.fillStyle = '#000';
+
+  if (background === 'transparent') {
+    drawFittedText(ctx, value, size, `${size}px ${EMOJI_FONT}`, TRANSPARENT_FILL_RATIO);
+    return canvas.toDataURL('image/png');
+  }
+
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#000';
 
   let fontSize = Math.max(6, Math.floor(available));
   while (fontSize > 6) {
@@ -169,8 +239,10 @@ export function generateSvgDataUrl(svgElement: SVGElement, config: IconConfig = 
     viewHeight = 24;
   }
 
-  const insetX = (viewWidth * padding) / size;
-  const insetY = (viewHeight * padding) / size;
+  const background = config.background ?? 'white';
+  const effectivePadding = background === 'transparent' ? size * 0.03 : padding;
+  const insetX = (viewWidth * effectivePadding) / size;
+  const insetY = (viewHeight * effectivePadding) / size;
   const totalWidth = viewWidth + insetX * 2;
   const totalHeight = viewHeight + insetY * 2;
 
@@ -183,7 +255,7 @@ export function generateSvgDataUrl(svgElement: SVGElement, config: IconConfig = 
     newSvg.setAttribute('xmlns', SVG_NS);
   }
 
-  if ((config.background ?? 'white') === 'white') {
+  if (background === 'white') {
     const background = document.createElementNS(SVG_NS, 'rect');
     background.setAttribute('x', String(minX - insetX));
     background.setAttribute('y', String(minY - insetY));
@@ -217,7 +289,13 @@ export function resizeImageToDataUrl(
 ): Promise<string> {
   const size = config.size ?? DEFAULT_SIZE;
   const background = config.background ?? 'white';
-  const padding = fit === 'contain' ? (config.padding ?? DEFAULT_PADDING) : 0;
+  const containPadding = config.padding ?? DEFAULT_PADDING;
+  const padding =
+    fit === 'contain'
+      ? background === 'transparent'
+        ? size * 0.03
+        : containPadding
+      : 0;
 
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {
