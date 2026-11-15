@@ -1,4 +1,4 @@
-import { storage } from 'wxt/storage'
+import { storage } from 'wxt/utils/storage'
 
 const changiconTheme = storage.defineItem<string>(
   'local:changicon-theme',

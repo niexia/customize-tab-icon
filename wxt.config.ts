@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  extensionApi: 'chrome',
+  browser: 'chrome',
   modules: ['@wxt-dev/module-react'],
   manifest: {
     permissions: ['storage', 'tabs',]
