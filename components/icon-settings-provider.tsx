@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { changiconBackground } from '@/lib/store';
+import { changiconBackground, changiconScope } from '@/lib/store';
 import type { IconBackground } from '@/lib/icon-image';
+import type { IconScope } from '@/lib/icon-key';
 import { log } from '@/lib/utils';
 import { IconSettingsContext } from './icon-settings-context';
 
@@ -10,24 +11,30 @@ type IconSettingsProviderProps = {
 
 export function IconSettingsProvider({ children }: IconSettingsProviderProps) {
   const [background, setBackgroundState] = useState<IconBackground>('white');
+  const [scope, setScopeState] = useState<IconScope>('page');
 
   useEffect(() => {
     let cancelled = false;
 
-    changiconBackground
-      .getValue()
-      .then((value) => {
-        if (!cancelled) setBackgroundState(value);
+    void Promise.all([changiconBackground.getValue(), changiconScope.getValue()])
+      .then(([backgroundValue, scopeValue]) => {
+        if (cancelled) return;
+        setBackgroundState(backgroundValue);
+        setScopeState(scopeValue);
       })
-      .catch((error) => log('error', 'Failed to read the icon background', error));
+      .catch((error) => log('error', 'Failed to read the icon settings', error));
 
-    const unwatch = changiconBackground.watch((value) => {
+    const unwatchBackground = changiconBackground.watch((value) => {
       setBackgroundState(value);
+    });
+    const unwatchScope = changiconScope.watch((value) => {
+      setScopeState(value);
     });
 
     return () => {
       cancelled = true;
-      unwatch();
+      unwatchBackground();
+      unwatchScope();
     };
   }, []);
 
@@ -38,7 +45,17 @@ export function IconSettingsProvider({ children }: IconSettingsProviderProps) {
       .catch((error) => log('error', 'Failed to save the icon background', error));
   }, []);
 
-  const value = useMemo(() => ({ background, setBackground }), [background, setBackground]);
+  const setScope = useCallback((value: IconScope) => {
+    setScopeState(value);
+    void changiconScope
+      .setValue(value)
+      .catch((error) => log('error', 'Failed to save the icon scope', error));
+  }, []);
+
+  const value = useMemo(
+    () => ({ background, setBackground, scope, setScope }),
+    [background, scope, setBackground, setScope],
+  );
 
   return <IconSettingsContext.Provider value={value}>{children}</IconSettingsContext.Provider>;
 }

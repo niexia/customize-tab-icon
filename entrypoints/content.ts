@@ -1,9 +1,10 @@
 import { onMessage } from '@/lib/messaging';
 import { clearFavicon, setFavicon } from '@/lib/favicon-dom';
 import {
-  getOriginalIcon,
-  getPageIcon,
+  getEffectiveIcon,
+  getEffectiveOriginalIcon,
   migrateLegacyIcons,
+  watchDomainIcon,
   watchPageIcon,
 } from '@/lib/icons';
 import { log } from '@/lib/utils';
@@ -21,31 +22,15 @@ export default defineContentScript({
     pageWindow[INJECTED_FLAG] = true;
 
     let currentIcon: string | null = null;
-    let unwatchIcon: (() => void) | null = null;
+    let unwatchPageIcon: (() => void) | null = null;
+    let unwatchDomainIcon: (() => void) | null = null;
     let observer: MutationObserver | null = null;
 
-    const watchCurrentPage = () => {
-      unwatchIcon?.();
-      unwatchIcon = watchPageIcon(window.location.href, (icon) => {
-        currentIcon = icon;
-
-        void (async () => {
-          const originalIcon = await getOriginalIcon(window.location.href).catch(() => null);
-
-          if (icon) {
-            setFavicon(icon, document, originalIcon);
-          } else {
-            clearFavicon(document, originalIcon);
-          }
-        })();
-      });
-    };
-
-    const applyIconForCurrentUrl = async () => {
+    const applyCurrentIcon = async () => {
       try {
         const [icon, originalIcon] = await Promise.all([
-          getPageIcon(window.location.href),
-          getOriginalIcon(window.location.href).catch(() => null),
+          getEffectiveIcon(window.location.href),
+          getEffectiveOriginalIcon(window.location.href).catch(() => null),
         ]);
 
         currentIcon = icon;
@@ -55,12 +40,28 @@ export default defineContentScript({
         } else {
           clearFavicon(document, originalIcon);
         }
-
-        // The SPA / other tab may change the URL, so keep the watcher in sync.
-        watchCurrentPage();
       } catch (error) {
         log('error', 'Failed to apply the tab icon', error);
       }
+    };
+
+    const refreshFromStorage = () => {
+      void applyCurrentIcon();
+    };
+
+    const watchCurrentPage = () => {
+      unwatchPageIcon?.();
+      unwatchDomainIcon?.();
+
+      unwatchPageIcon = watchPageIcon(window.location.href, refreshFromStorage);
+      unwatchDomainIcon = watchDomainIcon(window.location.href, refreshFromStorage);
+    };
+
+    const applyIconForCurrentUrl = async () => {
+      await applyCurrentIcon();
+
+      // The SPA / other tab may change the URL, so keep the watcher in sync.
+      watchCurrentPage();
     };
 
     const startObserver = () => {
@@ -97,7 +98,7 @@ export default defineContentScript({
       currentIcon = null;
 
       const originalIcon =
-        message.data ?? (await getOriginalIcon(window.location.href).catch(() => null));
+        message.data ?? (await getEffectiveOriginalIcon(window.location.href).catch(() => null));
 
       return clearFavicon(document, originalIcon);
     });
@@ -111,8 +112,10 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       observer?.disconnect();
       observer = null;
-      unwatchIcon?.();
-      unwatchIcon = null;
+      unwatchPageIcon?.();
+      unwatchDomainIcon?.();
+      unwatchPageIcon = null;
+      unwatchDomainIcon = null;
     });
 
     void (async () => {

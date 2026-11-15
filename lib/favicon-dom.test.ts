@@ -92,6 +92,16 @@ describe('favicon-dom', () => {
     expect(link.getAttribute('sizes')).toBe('any');
   });
 
+  it('does not treat a previous custom icon as the site icon', () => {
+    const link = createLink({ rel: 'icon', href: '/favicon.ico' });
+
+    setFavicon(PNG_ICON);
+    setFavicon(SVG_ICON);
+    clearFavicon();
+
+    expect(link.getAttribute('href')).toBe('/favicon.ico');
+  });
+
   it('restores the latest site icon when the site changed it', () => {
     const link = createLink({ rel: 'icon', href: '/old.ico' });
 

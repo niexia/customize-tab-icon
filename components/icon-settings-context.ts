@@ -1,9 +1,12 @@
 import { createContext, useContext } from 'react';
 import type { IconBackground } from '@/lib/icon-image';
+import type { IconScope } from '@/lib/icon-key';
 
 export type IconSettings = {
   background: IconBackground;
   setBackground: (background: IconBackground) => void;
+  scope: IconScope;
+  setScope: (scope: IconScope) => void;
 };
 
 export const IconSettingsContext = createContext<IconSettings | undefined>(undefined);

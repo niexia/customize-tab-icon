@@ -12,6 +12,7 @@ A simple yet powerful Chrome extension that allows you to customize website (bro
 - **Icon library** - search icons from lucide and use them as SVG icons
 - **Image upload** - PNG / JPG / WebP / GIF / SVG; fill the icon (crop) or fit the whole image
 - **Rounded tile style** - consistent white rounded background for all icon types
+- **Apply to** - current page (default) or whole site (domain and subdomains), configured in the settings section; page icons take precedence over site icons
 - **Per-page icons** - matches `host + pathname`, applied automatically on page load
 - **Restore in place** - `Reset` puts the site's original favicon back without reloading
 - **Icon background** - white tile or transparent (configured in the settings section; applies to new icons)
@@ -23,6 +24,7 @@ A simple yet powerful Chrome extension that allows you to customize website (bro
 - `storage` - save the selected icons and the theme
 - `activeTab` - read the URL/favicon of the tab the popup was opened for
 - `scripting` - inject the content script into tabs that were already open before install/update
+- `host_permissions` (`http/https`) - sync a whole-site icon to already-open tabs; content scripts already run on all sites, so this does not add a new access category
 
 Content scripts run on `http(s)` pages to apply the icon. Icons are generated locally; no remote code is loaded.
 

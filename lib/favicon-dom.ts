@@ -11,6 +11,7 @@
 const OWN_LINK_ID = 'changicon-favicon';
 const MANAGED_ATTR = 'data-changicon-managed';
 const ORIGINAL_ATTR = 'data-changicon-original';
+const APPLIED_ATTR = 'data-changicon-applied';
 
 interface OriginalAttrs {
   href: string | null;
@@ -88,6 +89,7 @@ function restoreLink(link: HTMLLinkElement): string | null {
   }
 
   link.removeAttribute(ORIGINAL_ATTR);
+  link.removeAttribute(APPLIED_ATTR);
   link.removeAttribute(MANAGED_ATTR);
 
   return original?.href ?? null;
@@ -154,24 +156,9 @@ export function setFavicon(
       getHead(doc).appendChild(link);
     }
 
-    const usableOriginal = isUsableOriginal(originalIcon, icon);
-
-    if (usableOriginal) {
-      const existing = getOriginalAttrs(link);
-
-      if (existing) {
-        existing.href = usableOriginal;
-        link.setAttribute(ORIGINAL_ATTR, JSON.stringify(existing));
-      } else {
-        writeOriginalAttrs(link, {
-          href: usableOriginal,
-          type: null,
-          sizes: null,
-          media: null,
-        });
-      }
-    } else if (!link.hasAttribute(ORIGINAL_ATTR)) {
-      const fallback = defaultFaviconUrl(doc);
+    if (!getOriginalAttrs(link)) {
+      const usableOriginal = isUsableOriginal(originalIcon, icon);
+      const fallback = usableOriginal ?? defaultFaviconUrl(doc);
 
       if (fallback) {
         writeOriginalAttrs(link, { href: fallback, type: null, sizes: null, media: null });
@@ -180,6 +167,7 @@ export function setFavicon(
 
     link.setAttribute('type', type);
     setOrRemoveAttribute(link, 'sizes', sizes);
+    link.setAttribute(APPLIED_ATTR, icon);
     link.setAttribute('href', icon);
     return;
   }
@@ -190,15 +178,20 @@ export function setFavicon(
   for (const link of links) {
     if (!link.hasAttribute(ORIGINAL_ATTR)) {
       recordOriginalAttrs(link);
-    } else if (link.getAttribute('href') !== icon) {
+    } else if (
+      link.hasAttribute(APPLIED_ATTR) &&
+      link.getAttribute('href') !== link.getAttribute(APPLIED_ATTR)
+    ) {
       // The site changed its icon while ours was shown. Remember the new
-      // original so "Reset" restores the latest site icon.
+      // original so "Reset" restores the latest site icon. Ignore changes we
+      // made ourselves when switching to another custom icon.
       updateOriginalHref(link, link.getAttribute('href'));
     }
 
     link.setAttribute('type', type);
     setOrRemoveAttribute(link, 'sizes', sizes);
     link.removeAttribute('media');
+    link.setAttribute(APPLIED_ATTR, icon);
     link.setAttribute('href', icon);
   }
 }

@@ -9,6 +9,7 @@ export default defineConfig({
     name: 'Changicon',
     description: 'An extension that allows you to customize website icons (tab icons).',
     permissions: ['storage', 'activeTab', 'scripting'],
+    host_permissions: ['*://*/*'],
   },
   vite: () => ({
     plugins: [tailwindcss()],
