@@ -5,8 +5,10 @@
  */
 
 export type IconStorageKey = `local:icon:${string}`;
+export type OriginalIconStorageKey = `local:icon-original:${string}`;
 
 export const ICON_KEY_PREFIX = 'local:icon:';
+export const ORIGINAL_ICON_KEY_PREFIX = 'local:icon-original:';
 
 /** Old storage format: `{ [host]: { [pathname]: { customIcon } } }` */
 export const LEGACY_ICON_KEY = 'local:changicon-local';
@@ -40,4 +42,9 @@ export function createIconStorageKey(host: string, pathname: string): IconStorag
 export function getIconStorageKey(url: string | URL): IconStorageKey {
   const parsed = typeof url === 'string' ? new URL(url) : url;
   return createIconStorageKey(parsed.host, parsed.pathname);
+}
+
+export function getOriginalIconStorageKey(url: string | URL): OriginalIconStorageKey {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+  return `${ORIGINAL_ICON_KEY_PREFIX}${parsed.host}${parsed.pathname}`;
 }

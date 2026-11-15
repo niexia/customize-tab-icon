@@ -8,9 +8,11 @@ import { Contact } from '@/components/contact';
 import { sendMessage } from '@/lib/messaging';
 import {
   clearAllIcons,
+  getOriginalIcon,
   getPageIcon,
   migrateLegacyIcons,
   removePageIcon,
+  setOriginalIcon,
   setPageIcon,
 } from '@/lib/icons';
 import { isSupportedUrl } from '@/lib/icon-key';
@@ -104,10 +106,24 @@ function App() {
       if (!value || !tab?.id || !tab.url || !supported) return;
 
       try {
+        // Remember the favicon the page had before the first custom icon.
+        // Pages without an icon link need this to restore the tab icon on reset.
+        const existingIcon = await getPageIcon(tab.url);
+        const originalIcon =
+          !existingIcon && tab.favIconUrl && tab.favIconUrl !== value
+            ? tab.favIconUrl
+            : undefined;
+
+        if (originalIcon) {
+          await setOriginalIcon(tab.url, originalIcon);
+        }
+
         // Persist first so the content script (or a freshly injected one)
         // picks the icon up when it initializes.
         await setPageIcon(tab.url, value);
-        await sendToTab(tab.id, () => sendMessage('setWebsiteIcon', value, tab.id));
+        await sendToTab(tab.id, () =>
+          sendMessage('setWebsiteIcon', { icon: value, originalIcon }, tab.id),
+        );
 
         setIcon(value);
         setHasCustomIcon(true);
@@ -125,33 +141,41 @@ function App() {
     if (!tab?.id || !tab.url || !supported) return;
 
     try {
-      await removePageIcon(tab.url);
-      const originalIcon = await sendToTab(tab.id, () =>
-        sendMessage('clearWebsiteIcon', undefined, tab.id),
+      const originalIcon = await getOriginalIcon(tab.url).catch(() => null);
+
+      // Tell the page before removing the stored icon, so it can restore the
+      // original favicon instead of relying on a storage watcher that no longer
+      // knows which favicon the page had.
+      const restoredIcon = await sendToTab(tab.id, () =>
+        sendMessage('clearWebsiteIcon', originalIcon ?? undefined, tab.id),
       );
 
-      setIcon(originalIcon ?? tab.favIconUrl ?? '');
+      await removePageIcon(tab.url);
+
+      setIcon(restoredIcon ?? originalIcon ?? tab.favIconUrl ?? '');
       setHasCustomIcon(false);
       setError(null);
     } catch (resetError) {
       log('error', 'Failed to reset the icon', resetError);
-      setError('The saved icon was removed, but the page was not updated. Refresh it to finish.');
+      setError('Could not reset the icon on this page. Try refreshing it and retry.');
     }
   }, [supported, tab]);
 
   const clearAll = useCallback(async () => {
     try {
+      const originalIcon = tab?.url ? await getOriginalIcon(tab.url).catch(() => null) : null;
+
       await clearAllIcons();
 
-      const originalIcon =
+      const restoredIcon =
         tab?.id && supported
           ? await sendToTab(tab.id, () =>
-              sendMessage('clearWebsiteIcon', undefined, tab.id),
+              sendMessage('clearWebsiteIcon', originalIcon ?? undefined, tab.id),
             ).catch(() => null)
           : null;
 
       setHasCustomIcon(false);
-      setIcon(originalIcon ?? tab?.favIconUrl ?? '');
+      setIcon(restoredIcon ?? originalIcon ?? tab?.favIconUrl ?? '');
       setError(null);
     } catch (clearError) {
       log('error', 'Failed to clear all icons', clearError);

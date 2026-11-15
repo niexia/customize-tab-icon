@@ -1,6 +1,11 @@
 import { onMessage } from '@/lib/messaging';
 import { clearFavicon, setFavicon } from '@/lib/favicon-dom';
-import { getPageIcon, migrateLegacyIcons, watchPageIcon } from '@/lib/icons';
+import {
+  getOriginalIcon,
+  getPageIcon,
+  migrateLegacyIcons,
+  watchPageIcon,
+} from '@/lib/icons';
 import { log } from '@/lib/utils';
 
 const INJECTED_FLAG = '__changiconContentLoaded';
@@ -23,23 +28,32 @@ export default defineContentScript({
       unwatchIcon?.();
       unwatchIcon = watchPageIcon(window.location.href, (icon) => {
         currentIcon = icon;
-        if (icon) {
-          setFavicon(icon);
-        } else {
-          clearFavicon();
-        }
+
+        void (async () => {
+          const originalIcon = await getOriginalIcon(window.location.href).catch(() => null);
+
+          if (icon) {
+            setFavicon(icon, document, originalIcon);
+          } else {
+            clearFavicon(document, originalIcon);
+          }
+        })();
       });
     };
 
     const applyIconForCurrentUrl = async () => {
       try {
-        const icon = await getPageIcon(window.location.href);
+        const [icon, originalIcon] = await Promise.all([
+          getPageIcon(window.location.href),
+          getOriginalIcon(window.location.href).catch(() => null),
+        ]);
+
         currentIcon = icon;
 
         if (icon) {
-          setFavicon(icon);
+          setFavicon(icon, document, originalIcon);
         } else {
-          clearFavicon();
+          clearFavicon(document, originalIcon);
         }
 
         // The SPA / other tab may change the URL, so keep the watcher in sync.
@@ -74,14 +88,18 @@ export default defineContentScript({
     };
 
     onMessage('setWebsiteIcon', (message) => {
-      currentIcon = message.data;
-      setFavicon(message.data);
+      currentIcon = message.data.icon;
+      setFavicon(message.data.icon, document, message.data.originalIcon);
       return true;
     });
 
-    onMessage('clearWebsiteIcon', () => {
+    onMessage('clearWebsiteIcon', async (message) => {
       currentIcon = null;
-      return clearFavicon();
+
+      const originalIcon =
+        message.data ?? (await getOriginalIcon(window.location.href).catch(() => null));
+
+      return clearFavicon(document, originalIcon);
     });
 
     onMessage('ping', () => true);

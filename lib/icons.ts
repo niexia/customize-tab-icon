@@ -2,6 +2,7 @@ import { storage } from 'wxt/utils/storage';
 import {
   createIconStorageKey,
   getIconStorageKey,
+  getOriginalIconStorageKey,
   LEGACY_ICON_KEY,
   LEGACY_MIGRATION_KEY,
   type IconStorageKey,
@@ -68,12 +69,29 @@ export async function removePageIcon(url: string): Promise<void> {
 }
 
 /**
+ * The favicon the page had before the extension touched it. Needed for pages
+ * without any `<link rel="icon">`, where we created the link ourselves and
+ * Chrome would otherwise keep showing our icon after the link is removed.
+ */
+export async function getOriginalIcon(url: string): Promise<string | null> {
+  const icon = await storage.getItem<string>(getOriginalIconStorageKey(url));
+  return icon ? icon : null;
+}
+
+export async function setOriginalIcon(url: string, icon: string): Promise<void> {
+  await storage.setItem(getOriginalIconStorageKey(url), icon);
+}
+
+/**
  * Remove every saved page icon, leaving the theme untouched.
  */
 export async function clearAllIcons(): Promise<void> {
   const local = await storage.snapshot('local');
   const keys: Array<`local:${string}`> = Object.keys(local)
-    .filter((key) => key.startsWith('icon:') && !key.endsWith('$'))
+    .filter(
+      (key) =>
+        (key.startsWith('icon:') || key.startsWith('icon-original:')) && !key.endsWith('$'),
+    )
     .map((key): `local:${string}` => `local:${key}`);
 
   if (keys.length > 0) {

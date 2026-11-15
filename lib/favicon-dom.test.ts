@@ -46,15 +46,31 @@ describe('favicon-dom', () => {
     expect(link.hasAttribute('data-changicon-original')).toBe(false);
   });
 
-  it('creates a fallback link when the page has no icon', () => {
+  it('keeps a fallback link pointing at the default favicon when cleared', () => {
     setFavicon(PNG_ICON);
 
     const fallback = document.getElementById('changicon-favicon');
     expect(fallback).not.toBeNull();
     expect(fallback?.getAttribute('href')).toBe(PNG_ICON);
 
-    clearFavicon();
-    expect(document.getElementById('changicon-favicon')).toBeNull();
+    const restored = clearFavicon();
+
+    // Removing the link would make Chrome keep showing the custom icon on
+    // pages that rely on the implicit /favicon.ico, so it is kept around.
+    expect(document.getElementById('changicon-favicon')).not.toBeNull();
+    expect(fallback?.getAttribute('href')).toBe('http://localhost:3000/favicon.ico');
+    expect(fallback?.hasAttribute('data-changicon-managed')).toBe(false);
+    expect(restored).toBe('http://localhost:3000/favicon.ico');
+  });
+
+  it('restores the captured original favicon for pages without icon links', () => {
+    setFavicon(PNG_ICON, document, 'https://example.com/site.ico');
+
+    const fallback = document.getElementById('changicon-favicon');
+    const restored = clearFavicon(document, 'https://example.com/site.ico');
+
+    expect(fallback?.getAttribute('href')).toBe('https://example.com/site.ico');
+    expect(restored).toBe('https://example.com/site.ico');
   });
 
   it('does not touch apple-touch icons', () => {
