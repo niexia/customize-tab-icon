@@ -68,6 +68,8 @@ Run this before every submission. It assumes the repository release steps in
 - [ ] Visibility: **Public** (or Unlisted/Private intentionally).
 - [ ] Regions: all, or the intended subset.
 - [ ] Pricing: free.
+- [ ] EU trader / non-trader declaration completed if the item is distributed in the EU.
+- [ ] Publisher contact email is verified and monitored.
 - [ ] If this is a beta build, the name ends with “BETA”/“DEVELOPMENT BUILD” and
       the description carries the required beta notice (not applicable to the
       normal listing).
