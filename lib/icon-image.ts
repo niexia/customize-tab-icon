@@ -1,6 +1,9 @@
+export type IconBackground = 'white' | 'transparent';
+
 export interface IconConfig {
   size?: number;
   padding?: number;
+  background?: IconBackground;
 }
 
 const DEFAULT_SIZE = 128;
@@ -79,7 +82,9 @@ export function generateTextDataUrl(text: string, config: IconConfig = {}): stri
   const available = size - padding * 2;
 
   ctx.clearRect(0, 0, size, size);
-  drawRoundedBackground(ctx, size);
+  if ((config.background ?? 'white') === 'white') {
+    drawRoundedBackground(ctx, size);
+  }
 
   let fontSize = Math.max(6, Math.floor(available));
   ctx.textAlign = 'center';
@@ -119,7 +124,9 @@ export function generateEmojiDataUrl(emoji: string, config: IconConfig = {}): st
   const available = size - padding * 2;
 
   ctx.clearRect(0, 0, size, size);
-  drawRoundedBackground(ctx, size);
+  if ((config.background ?? 'white') === 'white') {
+    drawRoundedBackground(ctx, size);
+  }
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#000';
@@ -176,15 +183,17 @@ export function generateSvgDataUrl(svgElement: SVGElement, config: IconConfig = 
     newSvg.setAttribute('xmlns', SVG_NS);
   }
 
-  const background = document.createElementNS(SVG_NS, 'rect');
-  background.setAttribute('x', String(minX - insetX));
-  background.setAttribute('y', String(minY - insetY));
-  background.setAttribute('width', String(totalWidth));
-  background.setAttribute('height', String(totalHeight));
-  background.setAttribute('rx', String(totalWidth / 4));
-  background.setAttribute('fill', '#fff');
-  background.setAttribute('stroke', 'none');
-  newSvg.insertBefore(background, newSvg.firstChild);
+  if ((config.background ?? 'white') === 'white') {
+    const background = document.createElementNS(SVG_NS, 'rect');
+    background.setAttribute('x', String(minX - insetX));
+    background.setAttribute('y', String(minY - insetY));
+    background.setAttribute('width', String(totalWidth));
+    background.setAttribute('height', String(totalHeight));
+    background.setAttribute('rx', String(totalWidth / 4));
+    background.setAttribute('fill', '#fff');
+    background.setAttribute('stroke', 'none');
+    newSvg.insertBefore(background, newSvg.firstChild);
+  }
 
   const svgString = new XMLSerializer().serializeToString(newSvg);
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
@@ -207,6 +216,7 @@ export function resizeImageToDataUrl(
   fit: ImageFit = 'cover',
 ): Promise<string> {
   const size = config.size ?? DEFAULT_SIZE;
+  const background = config.background ?? 'white';
   const padding = fit === 'contain' ? (config.padding ?? DEFAULT_PADDING) : 0;
 
   return new Promise((resolve, reject) => {
@@ -239,7 +249,7 @@ export function resizeImageToDataUrl(
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        if (fit === 'contain') {
+        if (background === 'white') {
           drawRoundedBackground(ctx, size);
         }
 

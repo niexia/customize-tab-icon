@@ -14,6 +14,7 @@ A simple yet powerful Chrome extension that allows you to customize website (bro
 - **Rounded tile style** - consistent white rounded background for all icon types
 - **Per-page icons** - matches `host + pathname`, applied automatically on page load
 - **Restore in place** - `Reset` puts the site's original favicon back without reloading
+- **Icon background** - white tile or transparent (configured in the settings section; applies to new icons)
 - **Manage saved icons** - clear all saved icons from the footer
 - **Dark / light / system theme**
 

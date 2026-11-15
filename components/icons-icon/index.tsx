@@ -4,6 +4,7 @@ import { usePopupHeight } from '@/hooks/usePopupHeight';
 import { actionItemClass } from '@/lib/styles';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Loader } from '../base/loader';
+import { useIconSettings } from '../icon-settings-context';
 
 // The icon picker pulls in the full lucide icon set; load it on demand.
 const IconPicker = lazy(() => import('./picker'));
@@ -14,6 +15,7 @@ interface IconsIconProps {
 
 export function IconsIcon({ onIconChange }: IconsIconProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const { background } = useIconSettings();
 
   usePopupHeight(popoverOpen);
 
@@ -36,7 +38,7 @@ export function IconsIcon({ onIconChange }: IconsIconProps) {
             </div>
           }
         >
-          <IconPicker onSelect={handleIconSelect} />
+          <IconPicker background={background} onSelect={handleIconSelect} />
         </Suspense>
       </PopoverContent>
     </Popover>

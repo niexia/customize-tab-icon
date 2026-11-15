@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import iconMetaData from '@/lib/data/iconMetaData';
 import { capitalizeIconName } from '@/lib/icon-names';
-import { generateSvgDataUrl } from '@/lib/icon-image';
+import { generateSvgDataUrl, type IconBackground } from '@/lib/icon-image';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
@@ -17,10 +17,11 @@ const ICON_NAMES = Object.keys(iconMetaData).map(capitalizeIconName);
 const PAGE_SIZE = 160;
 
 interface IconPickerProps {
+  background: IconBackground;
   onSelect: (iconDataUrl: string) => void;
 }
 
-export default function IconPicker({ onSelect }: IconPickerProps) {
+export default function IconPicker({ background, onSelect }: IconPickerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ query: '', limit: PAGE_SIZE });
 
@@ -44,7 +45,7 @@ export default function IconPicker({ onSelect }: IconPickerProps) {
     const svgElement = event.currentTarget.querySelector('svg');
     if (!svgElement) return;
 
-    const svgDataUrl = generateSvgDataUrl(svgElement as SVGElement);
+    const svgDataUrl = generateSvgDataUrl(svgElement as SVGElement, { background });
     if (svgDataUrl) onSelect(svgDataUrl);
   };
 

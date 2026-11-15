@@ -2,6 +2,7 @@ import { Image } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { actionItemClass } from '@/lib/styles';
 import { resizeImageToDataUrl, type ImageFit } from '@/lib/icon-image';
+import { useIconSettings } from './icon-settings-context';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -17,6 +18,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [fit, setFit] = useState<ImageFit>('cover');
+  const { background } = useIconSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -42,7 +44,7 @@ export function UploadIcon({ onIconChange }: UploadIconProps) {
     setError(null);
 
     try {
-      const resizedDataUrl = await resizeImageToDataUrl(file, {}, fit);
+      const resizedDataUrl = await resizeImageToDataUrl(file, { background }, fit);
       onIconChange(resizedDataUrl);
       setOpen(false);
     } catch (submitError) {

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { IconSettingsProvider } from '@/components/icon-settings-provider';
+import { SettingsPanel } from '@/components/settings-panel';
 import { Header } from '@/components/header';
 import { IconDisplay } from '@/components/icon-display';
 import { SettingIcon } from '@/components/setting-icon';
@@ -187,21 +189,24 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Header />
-      <IconDisplay
-        icon={icon}
-        loading={loading}
-        canReset={hasCustomIcon}
-        hint={hint}
-        onReset={resetIcon}
-      />
-      {supported ? <SettingIcon onIconChange={applyIcon} /> : null}
-      {error ? (
-        <p role="alert" className="px-4 pb-2 text-xs text-destructive">
-          {error}
-        </p>
-      ) : null}
-      <Contact onClearAll={clearAll} />
+      <IconSettingsProvider>
+        <Header />
+        <IconDisplay
+          icon={icon}
+          loading={loading}
+          canReset={hasCustomIcon}
+          hint={hint}
+          onReset={resetIcon}
+        />
+        {supported ? <SettingIcon onIconChange={applyIcon} /> : null}
+        <SettingsPanel />
+        {error ? (
+          <p role="alert" className="px-4 pb-2 text-xs text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <Contact onClearAll={clearAll} />
+      </IconSettingsProvider>
     </ThemeProvider>
   );
 }

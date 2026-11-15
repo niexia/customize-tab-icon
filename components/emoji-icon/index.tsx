@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from 'react';
 import { usePopupHeight } from '@/hooks/usePopupHeight';
 import { actionItemClass } from '@/lib/styles';
 import { generateEmojiDataUrl } from '@/lib/icon-image';
+import { useIconSettings } from '../icon-settings-context';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Loader } from '../base/loader';
 import styles from './index.module.css';
@@ -16,11 +17,12 @@ interface EmojiIconProps {
 
 export function EmojiIcon({ onIconChange }: EmojiIconProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const { background } = useIconSettings();
 
   usePopupHeight(popoverOpen);
 
   const handleEmojiSelect = (emoji: string) => {
-    const emojiDataUrl = generateEmojiDataUrl(emoji);
+    const emojiDataUrl = generateEmojiDataUrl(emoji, { background });
     if (!emojiDataUrl) return;
 
     onIconChange(emojiDataUrl);
