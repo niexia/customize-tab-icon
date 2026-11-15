@@ -1,8 +1,8 @@
 {
   "name": "changicon",
-  "description": "An extension that allows you to customize website icons (tab icons).",
+  "description": "Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page or a whole site.",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -25,8 +25,11 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm compile && pnpm lint && pnpm test && pnpm build",
-    "postinstall": "wxt prepare"
+    "check": "pnpm compile && pnpm lint && pnpm test && pnpm build && pnpm docs:check",
+    "postinstall": "wxt prepare",
+    "store:assets": "pnpm build && node scripts/store/build-assets.mjs",
+    "changelog": "node scripts/changelog.mjs --write",
+    "docs:check": "node scripts/docs-check.mjs"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

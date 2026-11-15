@@ -1,0 +1,31 @@
+# Changelog
+
+All notable changes to Changicon are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+## [1.1.0] - 2026-11-15
+
+### Features
+
+- **Whole-site icons:** one icon for every page on a registrable domain, including subdomains. Page-specific icons still take precedence. ([430477e](https://github.com/niexia/customize-tab-icon/commit/430477e057b6f2f0d2cf01bb575c913a31d03d97))
+- **Icon background:** choose a white rounded tile or a transparent background for new text, emoji, and icon renders. ([aaad389](https://github.com/niexia/customize-tab-icon/commit/aaad3891ff5b7da2fd798a472194042253a35bc3), [01e529a](https://github.com/niexia/customize-tab-icon/commit/01e529a3be98ca6437a9addec4dc40cff2729108))
+- **Image fit:** uploaded images can crop to fill the tile or fit the whole image. ([70d67c1](https://github.com/niexia/customize-tab-icon/commit/70d67c1438550cec5a17d36f65fcc877df9a55e5))
+- **Reset in place:** capture and restore the site's original favicon; pages without a `<link rel="icon">` keep a working `/favicon.ico` link. ([2ce6485](https://github.com/niexia/customize-tab-icon/commit/2ce6485009471ed3b46c9a31ba42d12ef758fa99))
+- **Popup sizing:** the popup grows for large emoji/icon pickers and collapses after their exit animation. ([9f24910](https://github.com/niexia/customize-tab-icon/commit/9f24910130ebfc5d31814afc4c04c9559896b9ca))
+
+### Refactoring
+
+- Remove unused icon-category metadata; add Vitest coverage for URL keys and favicon DOM handling. ([eeed9b1](https://github.com/niexia/customize-tab-icon/commit/eeed9b1a49bf9dc05802275b98ae7aaa194a6ea7))
+
+### Documentation
+
+- Add the architecture and release-process docs, the Chrome Web Store kit, and agent skills for future releases.
+
+## [1.0.1] - 2025-04-28
+
+### Added
+
+- Initial public Chrome Web Store release: emoji, text, Lucide icon, and uploaded-image tab icons; per-page storage; light, dark, and system themes.

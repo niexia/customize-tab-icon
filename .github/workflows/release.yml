@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm compile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Documentation gate
+        run: pnpm docs:check
+
+      - name: Check tag matches package version
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json v$VERSION"
+            exit 1
+          fi
+
+      - name: Build and zip
+        run: pnpm zip
+
+      - name: Extract release notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG.md entry for v$VERSION" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: .output/*-chrome.zip
+          fail_on_unmatched_files: true
+
+      # Chrome Web Store submission is manual for now: the v1.1 API used by
+      # WXT 0.20's `wxt submit` was retired on 2026-10-15. After migrating to
+      # WXT >= 0.21.5 (Node 22) and API v2 with a service account, add a gated
+      # step like this and store the credentials as repository secrets:
+      #
+      # - name: Submit to Chrome Web Store
+      #   if: vars.CWS_SUBMIT == 'true'
+      #   run: pnpm wxt submit --chrome-zip .output/*-chrome.zip
+      #   env:
+      #     CHROME_API_VERSION: v2
+      #     CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      #     CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+      #     CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+      #     CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+      #     CHROME_SKIP_SUBMIT_REVIEW: 'false'

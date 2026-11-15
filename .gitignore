@@ -4,3 +4,6 @@ node_modules
 coverage
 *.tsbuildinfo
 .DS_Store
+.store-demo/
+.env.submit
+.env.submit.*
