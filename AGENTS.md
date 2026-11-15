@@ -31,6 +31,8 @@ with pnpm.
 
 ## Commands
 
+Prerequisites: Node 22+ (see `.nvmrc`) and pnpm (pinned in `package.json`).
+
 ```bash
 pnpm install             # install; postinstall runs wxt prepare
 pnpm dev                 # WXT dev server (Chrome)
