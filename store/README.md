@@ -1,6 +1,6 @@
 # Changicon — Chrome Web Store submission
 
-<!-- release: 1.1.0 -->
+<!-- release: 1.2.0 -->
 
 Copy-paste sheet for updating the store. Assets are in [`assets/`](assets/); the
 public policy is [`../docs/privacy.md`](../docs/privacy.md); the end-to-end
@@ -8,7 +8,7 @@ release steps are in [`../docs/release-process.md`](../docs/release-process.md).
 
 - Dashboard: <https://chrome.google.com/webstore/devconsole>
 - Extension ID: `pcnnpfojchdoapfnaanpibdkjbdmglhi`
-- Current version: `1.1.0` (last store build: `1.0.1`)
+- Current version: `1.2.0` (previous release: `1.1.0`)
 - Homepage: <https://github.com/niexia/customize-tab-icon>
 - Support: <https://github.com/niexia/customize-tab-icon/issues>
 - Privacy policy: <https://github.com/niexia/customize-tab-icon/blob/main/docs/privacy.md>
@@ -22,7 +22,7 @@ Node 22, and a service account (future migration).
 | Field | Value | Limit |
 | --- | --- | --- |
 | Title (manifest `name`) | `Changicon` | 9 / 75 |
-| Summary (manifest `description`) | `Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page or a whole site.` | 110 / 132 |
+| Summary (manifest `description`) | `Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page, one subdomain, or a whole site.` | 126 / 132 |
 | Category | **Tools** | — |
 | Language | **English** | — |
 | Visibility | **Public** | — |
@@ -36,7 +36,7 @@ locales are optional; the extension UI is English.
 
 ### Description
 
-Plain text, **1,862 / 16,000** characters. Paste the block:
+Plain text, **2,171 / 16,000** characters. Paste the block:
 
 ```text
 Changicon lets you replace the favicon of any web page with a graphic you choose, so every tab is easy to recognize at a glance.
@@ -49,7 +49,8 @@ Pick what fits the page:
 
 Choose where it applies:
 • This page — only the current address.
-• Whole site — every page on the domain, including subdomains. Page-specific picks still override the site-wide one.
+• This subdomain — every page on the hostname you are on (for example news.example.com). On a bare domain it reads "This domain"; on localhost or an IP address it reads "This server".
+• Whole site — every page on the domain, including subdomains. Page and subdomain picks still override the site-wide one.
 
 Make it yours:
 • White rounded tile or transparent background.
@@ -66,6 +67,7 @@ Private by design:
 Good to know:
 • Works on regular http(s) pages. Chrome's own pages, the Chrome Web Store, and the PDF viewer can't be customized.
 • The site-wide choice uses the domain (for example, news.example.com and example.com share one graphic).
+• The subdomain choice uses the exact hostname, including its port, so localhost:3000 and localhost:4000 stay separate.
 • Artwork is stored per browser profile and is not synced between devices.
 
 Permissions and why they are needed:
@@ -105,7 +107,7 @@ upload popover is not one of the five English screenshots.
 **Single purpose:**
 
 ```text
-Changicon has one purpose: to let the user replace the favicon (the icon shown in a browser tab) of web pages with an icon they choose, either for the current page or for a whole site. All icon generation and storage happen locally in the browser.
+Changicon has one purpose: to let the user replace the favicon (the icon shown in a browser tab) of web pages with an icon they choose, either for the current page, the current hostname, or for a whole site. All icon generation and storage happen locally in the browser.
 ```
 
 **Permission justifications** (one per dashboard field):
@@ -123,7 +125,7 @@ scripting: Tabs that were already open before the extension was installed or upd
 ```
 
 ```text
-Host permission (*://*/*): The content script must be able to replace the <link rel="icon"> element on any regular web page the user chooses to customize, and the popup must reach already-open tabs on the same site so a page or site icon updates everywhere immediately. The extension does not read page text, form values, cookies, or network requests; it reads and rewrites favicon link elements only, and only for pages where the user has applied an icon.
+Host permission (*://*/*): The content script must be able to replace the <link rel="icon"> element on any regular web page the user chooses to customize, and the popup must reach already-open tabs on the same site so a page, subdomain, or site icon updates everywhere immediately. The extension does not read page text, form values, cookies, or network requests; it reads and rewrites favicon link elements only, and only for pages where the user has applied an icon.
 ```
 
 **Remote code:** select **No**.
@@ -160,13 +162,14 @@ Changicon is a local-only favicon customizer. No account or credentials are need
 5. Click "Reset page". The site's original favicon returns without a reload.
 6. Open "Text", type "YT", confirm. A two-character badge becomes the tab icon.
 7. Open "Upload", choose any PNG/JPG/WebP/SVG under 5 MB, confirm. The image is cropped into a rounded icon; "Fit whole image" letterboxes it instead.
-8. Set "Apply to" to "Whole site" and pick an icon. Open another path on the same domain (and a subdomain if available). The icon applies on load and replaces page-specific icons for that site.
-9. Use the trash icon -> "Clear all"; all saved icons are removed and theme/background/scope remain.
-10. Open chrome://extensions/. The popup shows "This page can't be customized" and no errors.
+8. On a subdomain (for example https://www.example.com/), set "Apply to" to "This subdomain" and pick an icon. Open another path on the same hostname: the icon applies there. Open a sibling subdomain or the bare domain: each keeps its own icon.
+9. Set "Apply to" to "Whole site" and pick an icon. Open another path on the same domain (and a subdomain if available). The icon applies on load and replaces page and subdomain icons for that site.
+10. Use the trash icon -> "Clear all"; all saved icons are removed and theme/background/scope remain.
+11. Open chrome://extensions/. The popup shows "This page can't be customized" and no errors.
 
-Expected: page content, forms, and network activity are unchanged; only the <link rel="icon"> element is rewritten. The extension works offline and makes no network requests. The site-wide option uses the registrable domain, so www.example.com, news.example.com, and example.com share one icon. Chrome's own pages, chrome-extension:// pages, and the Chrome Web Store cannot be customized.
+Expected: page content, forms, and network activity are unchanged; only the <link rel="icon"> element is rewritten. The extension works offline and makes no network requests. The subdomain option uses the exact hostname (including its port); the site-wide option uses the registrable domain, so www.example.com, news.example.com, and example.com share one icon. Chrome's own pages, chrome-extension:// pages, and the Chrome Web Store cannot be customized.
 
-The broad host permission (*://*/*) is required because the user can customize any page and the extension must reach already-open tabs when a site-wide icon is applied. The content script only replaces favicon link elements; it does not read page text, forms, cookies, or network requests.
+The broad host permission (*://*/*) is required because the user can customize any page and the extension must reach already-open tabs when a subdomain or site-wide icon is applied. The content script only replaces favicon link elements; it does not read page text, forms, cookies, or network requests.
 ```
 
 ## Submission checklist

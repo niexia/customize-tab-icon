@@ -2,7 +2,7 @@
   "name": "changicon",
   "description": "Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page or a whole site.",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "license": "MIT",
   "repository": {

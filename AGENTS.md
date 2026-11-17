@@ -8,7 +8,7 @@ adds documentation-specific rules when you work under `docs/`.
 
 Changicon is a Chrome Manifest V3 extension that replaces the favicon of web
 pages with a user-chosen icon (emoji, up to two characters, a Lucide icon, or an
-uploaded image) for one page or a whole site. It is built with **WXT 0.20 +
+uploaded image) for one page, one subdomain, or a whole site. It is built with **WXT 0.20 +
 React 19 + TypeScript + Tailwind 4 + shadcn/Radix**, tested with Vitest, packaged
 with pnpm.
 

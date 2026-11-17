@@ -45,7 +45,7 @@ const SHOTS = [
     slug: 'screenshot-1-hero',
     eyebrow: 'TAB ICON CUSTOMIZER',
     title: 'Give every tab a face you <em>recognize.</em>',
-    sub: 'Emoji, text, line icons, or your own image — set it for one page or a whole site, instantly.',
+    sub: 'Emoji, text, line icons, or your own image — set it for one page, one subdomain, or a whole site, instantly.',
     points: [
       'Works on any http(s) page',
       'Light, dark, or match your system',
@@ -119,10 +119,10 @@ const SHOTS = [
   },
   {
     slug: 'screenshot-4-site',
-    eyebrow: 'PAGE OR SITE',
+    eyebrow: 'PAGE · SUBDOMAIN · SITE',
     title: 'One icon for the <em>whole site.</em>',
-    sub: 'Apply to a single page or every page on a domain — including subdomains.',
-    points: ['Per-page overrides', 'Domain-wide in one click', 'Subdomains included'],
+    sub: 'Set an icon for one page, one subdomain, or the whole domain — including its subdomains.',
+    points: ['Per-page overrides', 'Per-subdomain control', 'Whole domain in one click'],
     accent: '#7dd3fc',
     glowA: 'rgba(14, 165, 233, 0.32)',
     glowB: 'rgba(99, 102, 241, 0.20)',
@@ -139,7 +139,7 @@ const SHOTS = [
     ],
     pageTitle: 'Acme Inc.',
     pageSub: 'One brand, one icon, across every page of the site.',
-    foot: 'Per page · Whole site · Subdomains',
+    foot: 'Per page · Per subdomain · Whole site',
   },
   {
     slug: 'screenshot-5-text',
@@ -362,7 +362,7 @@ function renderSmallPromo() {
   <div class="stage">
     <div class="brand"><img src="/icon/128.png" alt="" /><span>Changicon</span></div>
     <h1>Your tabs.<br /><em>Your icons.</em></h1>
-    <p>Emoji, text, line icons, or your own image — for any page or whole site.</p>
+    <p>Emoji, text, line icons, or your own image — for any page, subdomain, or whole site.</p>
     <div class="tabs">
       <span class="fav">📚</span><span class="fav">🎵</span><span class="fav text">S</span><span class="fav">💬</span><span class="fav text">N</span>
     </div>
@@ -431,7 +431,7 @@ function renderMarquee() {
       <div class="brand"><img src="/icon/128.png" alt="" /><span>Changicon</span></div>
       <div class="eyebrow">TAB ICON CUSTOMIZER</div>
       <h1>Make every tab<br /><em>instantly recognizable.</em></h1>
-      <p>Give any page its own favicon — emoji, text, a line icon, or an image you upload. One page or the whole site.</p>
+      <p>Give any page its own favicon — emoji, text, a line icon, or an image you upload. One page, one subdomain, or the whole site.</p>
       <div class="points"><span>✓ Free</span><span>✓ No tracking</span><span>✓ Works locally</span></div>
     </div>
     <div class="tabs">${tabs}</div>

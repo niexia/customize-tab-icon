@@ -81,7 +81,7 @@ account — do not pretend it is configured.
 
 ## Privacy answer guidance
 
-- Single purpose: replace the tab favicon for a page or a whole site.
+- Single purpose: replace the tab favicon for a page, one subdomain, or a whole site.
 - `storage`: icons, original favicon URLs, settings — local only.
 - `activeTab`: active tab URL/favicon when the popup opens.
 - `scripting`: inject the content script into tabs opened before install/update.

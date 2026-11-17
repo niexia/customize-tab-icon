@@ -4,13 +4,13 @@
 
 Changicon is a Chrome extension that replaces a page's favicon with an icon you
 choose — an emoji, up to two characters, a Lucide icon, or an image you upload.
-Apply it to one page or to a whole site. Everything is generated and stored
+Apply it to one page, one subdomain, or a whole site. Everything is generated and stored
 locally; there is no account, no tracking, and no network access.
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Changicon-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/changicon/pcnnpfojchdoapfnaanpibdkjbdmglhi)
 [![CI](https://github.com/niexia/customize-tab-icon/actions/workflows/ci.yml/badge.svg)](https://github.com/niexia/customize-tab-icon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-black.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.0-black.svg)](CHANGELOG.md)
 
 <img src="./store/assets/screenshot-1-hero.png" alt="Changicon popup over a browser window, with custom emoji and text icons in the tab strip" width="100%" />
 
@@ -24,8 +24,10 @@ small, local utility: no account, no sync, no analytics, no remote code.
 - **Four icon sources** — emoji (full picker + search), text (up to 2 characters,
   auto-fitted), Lucide icons (searchable), and image upload (PNG, JPG, WebP, GIF,
   SVG; up to 5 MB).
-- **Page or whole site** — set one page, or every page on the registrable domain
-  including subdomains. Page-specific icons still win.
+- **Three scopes** — set one page, every page on the current hostname
+  (`This subdomain`, `This domain` on a bare domain, `This server` on
+  localhost/IP), or the whole registrable domain including subdomains. Narrower
+  scopes win, and applying a wider one replaces the narrower icons it covers.
 - **Instant, in place** — the tab icon changes immediately; reset restores the
   site's own favicon without reloading.
 - **Consistent tiles** — white rounded tile or transparent background, chosen in
@@ -39,7 +41,7 @@ small, local utility: no account, no sync, no analytics, no remote code.
 
 <table>
   <tr>
-    <td align="center"><img src="./docs/screenshots/popup-dark.png" width="260" alt="Main popup in dark mode with a custom icon, Emoji/Icon/Text/Upload actions, and page/site settings" /><br /><sub><b>Main popup</b> — page or site, reset in place</sub></td>
+    <td align="center"><img src="./docs/screenshots/popup-dark.png" width="260" alt="Main popup in dark mode with a custom icon, Emoji/Icon/Text/Upload actions, and page/host/site settings" /><br /><sub><b>Main popup</b> — page, subdomain, or site</sub></td>
     <td align="center"><img src="./docs/screenshots/popup-emoji.png" width="260" alt="Emoji picker open in the popup with search and frequent emoji" /><br /><sub><b>Emoji</b> — search the full library</sub></td>
     <td align="center"><img src="./docs/screenshots/popup-icons.png" width="260" alt="Lucide icon picker with search and a grid of arrow icons" /><br /><sub><b>Icons</b> — Lucide search</sub></td>
   </tr>
@@ -62,8 +64,8 @@ environment; see [`store/README.md`](store/README.md). The five store-ready
 | **Text** | One or two characters, auto-fitted; white or transparent |
 | **Icon library** | Lucide icons with instant search and SVG output |
 | **Upload** | 5 MB limit; cover/crop or contain/fit; rounded consistent tile |
-| **Scope** | `This page` (`host + pathname`) or `Whole site` (registrable domain, subdomains included) |
-| **Precedence** | Page icon wins over site icon; reset reveals the site icon |
+| **Scope** | `This page` (`host + pathname`), `This subdomain` (`host`, port included), or `Whole site` (registrable domain, subdomains included) |
+| **Precedence** | Page beats subdomain beats site; reset reveals the next broader icon |
 | **Reset** | Restores the page's original favicon without reloading; works on pages with no icon link |
 | **Clear all** | Removes every saved icon and original favicon URL; keeps preferences |
 | **Theme** | Dark, light, or system; mirrored to `localStorage` for a flash-free popup |

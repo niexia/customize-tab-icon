@@ -1,12 +1,12 @@
 # Architecture
 
-<!-- release: 1.1.0 -->
+<!-- release: 1.2.0 -->
 
 This document describes how Changicon works at runtime and how the codebase is
 organized. It is the reference for maintainers and for agents changing the
 extension. The diagrams are Mermaid and render directly on GitHub.
 
-- Applies to: **v1.1.0**
+- Applies to: **v1.2.0**
 - Source of truth: `entrypoints/`, `lib/`, `components/`, `wxt.config.ts`
 - Related docs: [Release process](release-process.md) · [Store assets](../store/README.md)
 

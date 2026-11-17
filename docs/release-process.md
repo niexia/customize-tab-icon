@@ -1,11 +1,11 @@
 # Release process
 
-<!-- release: 1.1.0 -->
+<!-- release: 1.2.0 -->
 
 This is the checklist for shipping a Changicon version. It covers the changelog,
 documentation, store assets, the GitHub release, and Chrome Web Store submission.
 
-- Applies to: **v1.1.0**
+- Applies to: **v1.2.0**
 - Related: [Architecture](architecture.md) · [Store kit](../store/README.md) · [Privacy policy](privacy.md) · [AGENTS.md](../AGENTS.md)
 
 ---
@@ -52,7 +52,7 @@ and omits docs/chore/CI/build/test/style plus the author list.
 
 ### Generate the next entry
 
-Tag the previous release first (for example `v1.1.0`); changelogen uses the
+Tag the previous release first (for example `v1.2.0`); changelogen uses the
 latest tag as its `--from` boundary.
 
 ```bash
@@ -87,7 +87,7 @@ both heading styles.
 
 Do not run `pnpm changelog` before the first tag exists: without a tag,
 changelogen treats the whole history as unreleased and would add a duplicate
-1.1.0-style entry. Tag `v1.1.0` before the next release.
+1.1.0-style entry. Tag the previous release (for example `v1.2.0`) before generating the next entry.
 
 ---
 
@@ -176,8 +176,8 @@ build, and no remote code is bundled.
 
 ```bash
 git add -A
-git commit -m "chore(release): v1.1.0"
-git tag -a v1.1.0 -m "v1.1.0"
+git commit -m "chore(release): v1.2.0"
+git tag -a v1.2.0 -m "v1.2.0"
 git push origin main --follow-tags
 ```
 
@@ -280,6 +280,14 @@ tabs until reload, which the popup's injection fallback tolerates.
 ---
 
 ## 9. Version-specific notes
+
+### v1.2.0 (2026-11-18)
+
+- Adds a per-host scope between page and whole site: `This subdomain` /
+  `This domain` / `This server`.
+- The Apply-to menu shows every option's concrete target, and applying a wider
+  scope replaces the narrower icons it covers, including the apex host entry.
+- No storage migration: existing page and site icons keep working.
 
 ### v1.1.0 (2026-11-15)
 

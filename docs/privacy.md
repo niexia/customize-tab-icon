@@ -1,6 +1,6 @@
 # Changicon Privacy Policy
 
-**Effective date:** 2026-11-15
+**Effective date:** 2026-11-18
 **Applies to:** the Changicon browser extension (Chrome Web Store ID
 `pcnnpfojchdoapfnaanpibdkjbdmglhi`) and its store listing.
 
@@ -23,8 +23,8 @@ choices you have.
 | Data | Why | When |
 | --- | --- | --- |
 | The icon you create (emoji, text, Lucide SVG, or uploaded image, converted to a data URL) | Show it in the tab and re-apply it later | Apply an icon |
-| The customized page's address (`host + pathname`) | Match the icon to the page again | Apply an icon |
-| The page's original favicon URL | Restore the site's own icon on reset | First apply to that page or site |
+| The customized page's address, hostname, or domain (`host + pathname`, `host`, or registrable domain) | Match the icon to the page, hostname, or site again | Apply an icon |
+| The page's original favicon URL | Restore the site's own icon on reset | First apply at that scope |
 | Theme, background, and apply-to preferences | Keep the popup as you set it | Change a setting |
 
 The extension does not store page text, form values, passwords, cookies,
@@ -60,8 +60,8 @@ favicon on pages you choose. The content script does not run on `chrome://`,
 
 ## Retention and deletion
 
-**Reset page/site** removes that page or site icon and restores the original
-favicon. **Clear all** removes every saved icon and original favicon URL while
+**Reset page/subdomain/site** removes that scope’s icon and restores the
+original favicon. **Clear all** removes every saved icon and original favicon URL while
 keeping theme/background/scope. Uninstalling removes the extension's storage.
 There is no server-side copy to delete.
 

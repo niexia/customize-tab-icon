@@ -8,7 +8,7 @@ export default defineConfig({
   manifest: {
     name: 'Changicon',
     description:
-      'Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page or a whole site.',
+      'Give any tab a custom icon — emoji, text, line icons, or your own image. Apply it to one page, one subdomain, or a whole site.',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['*://*/*'],
   },
