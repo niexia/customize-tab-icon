@@ -1,23 +1,26 @@
 import { LoaderCircle } from 'lucide-react';
 import type { IconScope } from '@/lib/icon-key';
 import { useState } from 'react';
+import { getResetLabel, getScopeLabel } from './scope-labels';
 import { Button } from './ui/button';
 
 type IconDisplayProps = {
   icon: string;
   loading: boolean;
   source: IconScope | null;
+  /** Active tab URL, used to name the host scope (subdomain, domain, server). */
+  url?: string;
   hint: string;
   onReset: () => void;
 };
 
-export function IconDisplay({ icon, loading, source, hint, onReset }: IconDisplayProps) {
+export function IconDisplay({ icon, loading, source, hint, url, onReset }: IconDisplayProps) {
   // Keep track of the failed URL instead of resetting state in an effect, so a
   // new icon is always retried.
   const [failedIcon, setFailedIcon] = useState<string | null>(null);
   const showIcon = Boolean(icon) && failedIcon !== icon;
-  const sourceLabel = source === 'page' ? 'This page' : source === 'domain' ? 'Whole site' : '';
-  const resetLabel = source === 'page' ? 'Reset page' : source === 'domain' ? 'Reset site' : 'Reset';
+  const sourceLabel = source ? getScopeLabel(url, source) : '';
+  const resetLabel = source ? getResetLabel(url, source) : 'Reset';
 
   return (
     <section className="flex items-center justify-between gap-2 p-4">

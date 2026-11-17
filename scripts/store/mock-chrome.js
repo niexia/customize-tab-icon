@@ -7,7 +7,10 @@
 (function () {
   var params = new URLSearchParams(location.search);
   var theme = params.get('theme') === 'light' ? 'light' : 'dark';
-  var scope = params.get('scope') === 'domain' ? 'domain' : 'page';
+  var scopeParam = params.get('scope');
+  var scope = scopeParam === 'host' || scopeParam === 'domain' ? scopeParam : 'page';
+  var site = params.get('site') || 'example.com';
+  var siteHost = site.split('.').slice(-2).join('.');
 
   localStorage.setItem('changicon-theme', theme);
 
@@ -38,13 +41,16 @@
     'changicon-scope': scope,
   };
 
-  // The popup shows the effective icon for https://example.com/.
+  // The popup shows the effective icon for the mocked active tab.
   if (scope === 'domain') {
-    initial['icon-domain:example.com'] = ICON;
-    initial['icon-original-domain:example.com'] = ORIGINAL_ICON;
+    initial['icon-domain:' + siteHost] = ICON;
+    initial['icon-original-domain:' + siteHost] = ORIGINAL_ICON;
+  } else if (scope === 'host') {
+    initial['icon-host:' + site] = ICON;
+    initial['icon-original-host:' + site] = ORIGINAL_ICON;
   } else {
-    initial['icon:example.com/'] = ICON;
-    initial['icon-original:example.com/'] = ORIGINAL_ICON;
+    initial['icon:' + site + '/'] = ICON;
+    initial['icon-original:' + site + '/'] = ORIGINAL_ICON;
   }
 
   var data = new Map(Object.entries(initial));
@@ -159,7 +165,7 @@
     {
       id: 1,
       active: true,
-      url: 'https://example.com/',
+      url: 'https://' + site + '/',
       title: 'Example',
       favIconUrl: ORIGINAL_ICON,
     },

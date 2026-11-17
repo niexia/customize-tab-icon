@@ -4,7 +4,7 @@
  * The popup build is loaded unchanged; query params select a UI state:
  *   scenario=main|emoji|icon|text|upload
  *   theme=dark|light
- *   scope=page|domain
+ *   scope=page|host|domain
  */
 (function () {
   var params = new URLSearchParams(location.search);

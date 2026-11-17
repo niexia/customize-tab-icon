@@ -24,10 +24,11 @@ pages with an icon the user creates:
 | A Lucide icon | SVG data URL, white rounded tile or transparent |
 | An uploaded image (PNG/JPG/WebP/GIF/SVG, ≤ 5 MB) | 128 px PNG data URL, cropped to fill or fitted whole |
 
-An icon can be saved for **one page** (`host + pathname`) or for a **whole
-site** (registrable domain, including subdomains). A page icon wins over a site
-icon. Everything is generated and stored locally; the extension makes no
-network requests and has no accounts, telemetry, or remote code.
+An icon can be saved for **one page** (`host + pathname`), for **one host**
+(every path on that hostname, including its port), or for a **whole site**
+(registrable domain, including subdomains). The narrower scope wins: page over
+host, host over site. Everything is generated and stored locally; the extension
+makes no network requests and has no accounts, telemetry, or remote code.
 
 Non-goals: changing page content, syncing icons between devices, replacing the
 browser's own UI, or customizing `chrome://` pages and the Chrome Web Store
@@ -84,7 +85,7 @@ entrypoints/
   content.ts            declarative content script: migrations, initial apply,
                         storage watchers, MutationObserver, SPA URL changes
 components/
-  icon-display.tsx      current icon, source label (page/site), reset label
+  icon-display.tsx      current icon, source label (page/host/site), reset label
   setting-icon.tsx      Emoji / Icon / Text / Upload action list
   emoji-icon/           lazy emoji-mart wrapper + picker
   icons-icon/           lazy Lucide grid + search
@@ -122,9 +123,11 @@ migration**.
 | --- | --- | --- | --- |
 | `changicon-theme` | `"dark" \| "light" \| "system"` | Popup | Theme preference (default `system`) |
 | `changicon-background` | `"white" \| "transparent"` | Popup | Background for newly generated icons (default `white`) |
-| `changicon-scope` | `"page" \| "domain"` | Popup | Where the next icon is applied (default `page`) |
+| `changicon-scope` | `"page" \| "host" \| "domain"` | Popup | Where the next icon is applied (default `page`) |
 | `icon:{host}{pathname}` | data URL | Popup | Page-specific icon |
 | `icon-original:{host}{pathname}` | URL | Popup | The page's own favicon before the first override |
+| `icon-host:{host}` | data URL | Popup | Icon for every path on one host |
+| `icon-original-host:{host}` | URL | Popup | The host's original favicon before the first override |
 | `icon-domain:{siteHost}` | data URL | Popup | Site-wide icon |
 | `icon-original-domain:{siteHost}` | URL | Popup | The site's own favicon before the first override |
 | `changicon-local` (legacy) | `{ host: { pathname: { customIcon } } }` | Old versions | Migrated to per-page keys and deleted |
@@ -134,10 +137,15 @@ migration**.
 Notes:
 
 - `host` includes the port; the protocol is intentionally ignored, so
-  `http://example.com/a` and `https://example.com/a` share an icon.
+  `http://example.com/a` and `https://example.com/a` share an icon. Host scope
+  keeps the port, so `localhost:3000` and `localhost:4000` stay independent.
 - `siteHost` is the registrable domain: `news.example.co.uk` → `example.co.uk`.
   IP addresses, `localhost`, and hosts without a dot fall back to the full
   `host` (including port).
+- Host and site keys can carry the same hostname (an apex domain such as
+  `example.com`); they are different scopes because the site scope also covers
+  subdomains. Applying a site icon removes the same-host entry, or it would
+  shadow the site icon on the apex.
 - Values are data URLs (PNG base64 or URL-encoded SVG), typically 2–20 KB at
   128 px. `chrome.storage.local` has a 10 MB quota; there is no `unlimitedStorage`
   permission.
@@ -148,18 +156,25 @@ Notes:
 flowchart TD
   URL["Current URL"] --> PAGE{"icon: host + path?"}
   PAGE -->|yes| PI["Page icon"]
-  PAGE -->|no| SITE{"icon-domain: siteHost?"}
+  PAGE -->|no| HOST{"icon-host: host?"}
+  HOST -->|yes| HI["Host icon"]
+  HOST -->|no| SITE{"icon-domain: siteHost?"}
   SITE -->|yes| SI["Site icon"]
   SITE -->|no| ORIG["The page's own favicon"]
   PI --> APPLY["Apply to link[rel~=icon]"]
+  HI --> APPLY
   SI --> APPLY
   ORIG --> APPLY
 ```
 
-- Applying a **site** icon removes all page overlays for that site, so the site
-  icon is uniform across pages.
-- Resetting a page icon with a site icon present reveals the site icon; the
-  content script is sent the fallback immediately and other tabs are synced.
+- Applying a **host** icon removes page overlays on that host; applying a
+  **site** icon removes page and host overlays across the whole site, so the
+  wider icon is uniform in its range.
+- `getScopeOptions` hides the site scope for `localhost` and IP addresses,
+  where host and site would be the same choice.
+- Resetting an icon reveals the next broader scope: page → host → site → the
+  page's own favicon. The content script is sent the fallback immediately and
+  other tabs are synced.
 
 ---
 
@@ -191,7 +206,7 @@ sequenceDiagram
     C->>D: clearFavicon(originalIcon)
   end
 
-  C->>S: watch page icon + site icon
+  C->>S: watch page, host, and site icons
   C->>D: MutationObserver on head (href/rel)
   Note over C,D: If the site replaces its icon, re-apply ours
 
@@ -203,14 +218,14 @@ Key implementation points:
 
 - `__changiconContentLoaded` on `window` prevents double registration when the
   popup injected the same script into an already-open tab.
-- `getEffectiveIcon` reads the page key first, then the site key.
+- `getEffectiveIcon` reads the page key, then the host key, then the site key.
 - The observer only acts when `currentIcon` is non-null and the page's own
   `link[rel~=icon].href` no longer equals our icon. It does not fight the site
   when no custom icon is active.
 - `ctx.onInvalidated` disconnects the observer and unsubscribes storage
   watchers when the extension updates or is removed.
 
-### 5.2 Apply an icon to the current page
+### 5.2 Apply an icon to a page or host
 
 ```mermaid
 sequenceDiagram
@@ -221,27 +236,31 @@ sequenceDiagram
   participant C as Content script (active tab)
   participant O as Other matching tabs
 
-  U->>P: Pick emoji / icon / text / image
+  U->>P: Choose "This page" or the host scope, then pick an icon
   P->>P: Generate 128 px data URL
-  P->>S: Read effective icon + original
+  P->>S: getEffectiveIcon + getEffectiveOriginalIcon
   opt Original favicon unknown and tab has favIconUrl
     P->>P: Use tab.favIconUrl as original
   end
-  P->>S: set icon-original: key
-  P->>S: set icon: key
+  P->>S: set icon-original-{scope}: target
+  P->>S: set icon-{scope}: target
   P->>C: setWebsiteIcon icon + originalIcon
   C->>C: setFavicon(icon, document, originalIcon)
-  P->>O: setWebsiteIcon for tabs with the same key
+  opt Scope is wider than page
+    P->>S: removeNarrowerIcons (page keys on this host)
+  end
+  P->>O: setWebsiteIcon for tabs with the same getScopeTarget
   O->>O: setFavicon(...)
-  P-->>U: Show new icon and "This page"
+  P-->>U: Show new icon and "This page" / "This subdomain"
 ```
 
 - `sendToTab` first tries `tabs.sendMessage`; if the tab has no content script
   (it was open before install/update), it calls `injectContentScript` with the
   manifest's content-script files and retries once.
-- `syncMatchingTabs` compares **storage keys** for page scope, so only the same
-  `host + pathname` is updated.
-- On failure the popup restores the previous stored page icon (or removes the
+- `syncMatchingTabs` compares `getScopeTarget(tab.url, scope)`, so page scope
+  matches the same `host + pathname`, host scope the same `host`, and site scope
+  the same registrable domain.
+- On failure the popup restores the previous icon at that scope (or removes the
   key) and shows an inline error.
 
 ### 5.3 Apply an icon to a whole site
@@ -260,8 +279,8 @@ sequenceDiagram
   P->>S: set icon-original-domain: siteHost
   P->>S: set icon-domain: siteHost
   P->>C: setWebsiteIcon icon + originalIcon
-  Note over P,S: Active tab is updated first, then page overlays are removed
-  P->>S: remove all icon: host + path for this site
+  Note over P,S: Active tab is updated first, then narrower icons are removed
+  P->>S: remove icon: and icon-host: entries for this site
   P->>O: setWebsiteIcon for every tab on the same siteHost
   O->>O: setFavicon(...) on each page
   P-->>U: Show new icon and "Whole site"
@@ -269,9 +288,12 @@ sequenceDiagram
 
 - The site key uses the **registrable domain**, so `www.example.com`,
   `news.example.com`, and `example.com` share one icon.
-- Existing page overrides are removed **after** the active tab succeeds, so a
-  failed write does not silently destroy per-page icons. The rollback path
-  restores the previous site icon; it does not restore removed page overlays.
+- Existing page and host overlays are removed **after** the active tab
+  succeeds, so a failed write does not silently destroy narrower icons. The
+  rollback path restores the previous site icon; it does not restore removed
+  overlays.
+- `removeNarrowerIcons(url, 'domain')` also removes a host entry for the apex
+  hostname, which would otherwise shadow the site icon there.
 - Other tabs are matched by `getSiteHost(tab.url)` and receive the effective
   icon (or a clear message when no icon applies).
 
@@ -286,19 +308,19 @@ sequenceDiagram
   participant C as Content script (active tab)
   participant O as Other tabs
 
-  U->>P: Click "Reset page" / "Reset site"
-  P->>S: Read page + site icons and original URL
+  U->>P: Click "Reset page" / "Reset host" / "Reset site"
+  P->>S: getEffectiveIconWithScope + original URL
   alt No custom icon
     P-->>U: Nothing to reset
   else An icon exists
     P->>C: clearWebsiteIcon(originalIcon) BEFORE deleting storage
     C->>C: clearFavicon -> restore original attributes
-    P->>S: remove page icon (or site icon)
-    opt A site icon remains after removing a page icon
-      P->>C: setWebsiteIcon(site icon)
+    P->>S: remove the icon key of the effective scope only
+    opt A broader icon remains after removing a narrower one
+      P->>C: setWebsiteIcon(broader icon)
     end
-    P->>O: Sync matching tabs (page or site)
-    P-->>U: Show the restored or fallback icon
+    P->>O: Sync matching tabs for the removed scope
+    P-->>U: Show the restored or fallback icon and its source
   end
 ```
 
@@ -306,10 +328,10 @@ sequenceDiagram
 script then still knows which original favicon to restore; relying only on the
 storage watcher would lose that value.
 
-"Clear all" removes every `icon:`, `icon-domain:`, `icon-original:`, and
-`icon-original-domain:` key, leaves theme/background/scope intact, clears the
-active tab, and syncs the site's other tabs. Tabs elsewhere clear through their
-own storage watchers.
+"Clear all" removes every `icon:`, `icon-host:`, `icon-domain:`, and matching
+`icon-original*` key, leaves theme/background/scope intact, clears the active
+tab, and syncs the site's other tabs. Tabs elsewhere clear through their own
+storage watchers.
 
 ### 5.5 SPA navigation and the favicon observer
 
@@ -394,9 +416,9 @@ flowchart TD
 | Area | Component | Data |
 | --- | --- | --- |
 | Header | `Header` / `ModeToggle` | theme |
-| Current icon | `IconDisplay` | effective icon, source (`page`/`site`), reset label, error |
+| Current icon | `IconDisplay` | effective icon, source (`page`/`host`/`domain`), reset label, error |
 | Actions | `SettingIcon` | Emoji, Icon, Text, Upload popovers |
-| Settings | `SettingsPanel` | scope (`This page`/`Whole site`), background (`White`/`Transparent`) |
+| Settings | `SettingsPanel` | scope (`This page` / host scope / `Whole site`), background (`White`/`Transparent`) |
 | Footer | `Contact` | X, GitHub, clear-all confirmation |
 
 `IconSettingsProvider` loads `changicon-background` and `changicon-scope` and
@@ -414,10 +436,20 @@ a 100 ms delay lets the 150 ms exit animation finish before collapsing.
 1. `migrateLegacyIcons()`.
 2. `chrome.tabs.query({active:true,currentWindow:true})`; unsupported URLs show
    "This page can't be customized".
-3. Read page icon, else site icon; show the tab's own `favIconUrl` when neither
-   exists.
+3. `getEffectiveIconWithScope` reads page, then host, then site scope; show the
+   tab's own `favIconUrl` when none exists.
 4. The source label and reset label follow the stored source: `This page` →
-   `Reset page`, `Whole site` → `Reset site`.
+   `Reset page`, `Whole site` → `Reset site`. The host scope is named for the
+   current URL by `components/scope-labels.ts`: `This subdomain` /
+   `Reset subdomain`, `This domain` on an apex domain, and `This server` on
+   localhost or an IP address. Every scope option also shows its concrete target
+   as a second line (`news.example.com`, `example.com, no subdomains`,
+   `example.com and all subdomains`), so `This domain` and `Whole site` stay
+   distinguishable on an apex domain.
+5. The scope select shows the scopes that make sense for the URL
+   (`getScopeOptions`), and `resolveScope` maps a stale preference (for example
+   `"domain"` on localhost) onto the host scope. The hint under the select names
+   the exact host or domain the choice covers.
 
 ### Failure behavior
 
@@ -425,7 +457,7 @@ a 100 ms delay lets the 150 ms exit animation finish before collapsing.
 | --- | --- |
 | No content script in the tab | Inject the manifest's content scripts and retry once |
 | Tab cannot be scripted (`chrome://`, Web Store) | `isSupportedUrl` rejects before applying; error shown |
-| Storage write fails | Previous page/site icon restored where possible; inline error |
+| Storage write fails | Previous icon at the same scope restored where possible; inline error |
 | Migrations fail | Logged; the promise is cleared so a later call retries |
 | Icon image fails to decode in `IconDisplay` | The failed URL is remembered and a new icon is retried |
 
@@ -501,6 +533,8 @@ exact dashboard justifications.
   may not be overridable.
 - Page keys ignore the query string and hash; two URLs that differ only there
   share a page icon.
+- Host keys include the port, while site keys do not: a site icon covers every
+  port of the registrable domain, a host icon only the current one.
 
 ---
 
@@ -556,8 +590,8 @@ does not simulate the content script or the Chrome Web Store.
 
 1. **Storage keys are a contract.** Add a migration and a marker; never reuse a
    key with a different shape.
-2. **Page beats site.** `getEffectiveIcon` must keep that order and reset must
-   reveal the site icon.
+2. **Narrower beats wider.** `getEffectiveIcon` must keep page > host > site,
+   and reset must reveal the next broader icon.
 3. **Restore, don't delete.** For pages without an icon link, keep the
    `#changicon-favicon` link on reset so Chromium refreshes the tab image.
 4. **No network.** Icons are data URLs; no remote assets, fonts, or code.

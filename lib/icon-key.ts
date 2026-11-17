@@ -4,15 +4,26 @@
  * Kept free of browser/storage imports so they can be unit tested.
  */
 
-export type IconScope = 'page' | 'domain';
+/**
+ * Page icons apply to one host + pathname, host icons to every path on one
+ * host (including its port) and site icons to the registrable domain.
+ */
+export type IconScope = 'page' | 'host' | 'domain';
+
+/** Narrowest → widest. Icon resolution walks this order. */
+export const ICON_SCOPES = ['page', 'host', 'domain'] as const;
 
 export type IconStorageKey = `local:icon:${string}`;
 export type OriginalIconStorageKey = `local:icon-original:${string}`;
+export type HostIconStorageKey = `local:icon-host:${string}`;
+export type HostOriginalIconStorageKey = `local:icon-original-host:${string}`;
 export type DomainIconStorageKey = `local:icon-domain:${string}`;
 export type DomainOriginalIconStorageKey = `local:icon-original-domain:${string}`;
 
 export const ICON_KEY_PREFIX = 'local:icon:';
 export const ORIGINAL_ICON_KEY_PREFIX = 'local:icon-original:';
+export const HOST_ICON_KEY_PREFIX = 'local:icon-host:';
+export const HOST_ORIGINAL_ICON_KEY_PREFIX = 'local:icon-original-host:';
 export const DOMAIN_ICON_KEY_PREFIX = 'local:icon-domain:';
 export const DOMAIN_ORIGINAL_ICON_KEY_PREFIX = 'local:icon-original-domain:';
 
@@ -54,6 +65,20 @@ export function getIconStorageKey(url: string | URL): IconStorageKey {
 export function getOriginalIconStorageKey(url: string | URL): OriginalIconStorageKey {
   const parsed = typeof url === 'string' ? new URL(url) : url;
   return `${ORIGINAL_ICON_KEY_PREFIX}${parsed.host}${parsed.pathname}`;
+}
+
+/**
+ * One storage entry per host for host-scoped icons. The port is part of the
+ * host, so `localhost:3000` and `localhost:4000` stay independent.
+ */
+export function getHostIconStorageKey(url: string | URL): HostIconStorageKey {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+  return `${HOST_ICON_KEY_PREFIX}${parsed.host}`;
+}
+
+export function getHostOriginalIconStorageKey(url: string | URL): HostOriginalIconStorageKey {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+  return `${HOST_ORIGINAL_ICON_KEY_PREFIX}${parsed.host}`;
 }
 
 const MULTI_LEVEL_PUBLIC_SUFFIXES = new Set([
@@ -144,4 +169,79 @@ export function getDomainOriginalIconStorageKey(
   url: string | URL,
 ): DomainOriginalIconStorageKey {
   return `${DOMAIN_ORIGINAL_ICON_KEY_PREFIX}${getSiteHost(url)}`;
+}
+
+/**
+ * The identifier a scope resolves to. Used both as the storage-key suffix and
+ * to decide whether two tabs are covered by the same icon:
+ * `page` = host + pathname, `host` = host including port, `domain` = siteHost.
+ */
+export function getScopeTarget(url: string | URL, scope: IconScope): string {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+
+  switch (scope) {
+    case 'page':
+      return `${parsed.host}${parsed.pathname}`;
+    case 'host':
+      return parsed.host;
+    case 'domain':
+      return getSiteHost(parsed);
+  }
+}
+
+export function getScopeIconStorageKey(
+  url: string | URL,
+  scope: IconScope,
+): IconStorageKey | HostIconStorageKey | DomainIconStorageKey {
+  switch (scope) {
+    case 'page':
+      return getIconStorageKey(url);
+    case 'host':
+      return getHostIconStorageKey(url);
+    case 'domain':
+      return getDomainIconStorageKey(url);
+  }
+}
+
+export function getScopeOriginalIconStorageKey(
+  url: string | URL,
+  scope: IconScope,
+): OriginalIconStorageKey | HostOriginalIconStorageKey | DomainOriginalIconStorageKey {
+  switch (scope) {
+    case 'page':
+      return getOriginalIconStorageKey(url);
+    case 'host':
+      return getHostOriginalIconStorageKey(url);
+    case 'domain':
+      return getDomainOriginalIconStorageKey(url);
+  }
+}
+
+/**
+ * Whether the site scope adds anything beyond the current host. IP addresses
+ * and localhost have no subdomains, so "this host" and "whole site" would be
+ * the same choice there.
+ */
+function hasSubdomainCoverage(url: string | URL): boolean {
+  const parsed = typeof url === 'string' ? new URL(url) : url;
+  const hostname = parsed.hostname.replace(/\.$/, '');
+  return Boolean(hostname) && hostname.includes('.') && !isIpOrLocalHost(hostname);
+}
+
+/**
+ * Scopes the popup offers for a URL, narrowest first. An apex domain still
+ * gets both host and site options: they share the same hostname but the site
+ * scope also covers subdomains.
+ */
+export function getScopeOptions(url: string | URL): IconScope[] {
+  return hasSubdomainCoverage(url) ? ['page', 'host', 'domain'] : ['page', 'host'];
+}
+
+/**
+ * Keep a stored scope preference valid for the current URL. A saved "whole
+ * site" preference on localhost falls back to the equivalent host scope.
+ */
+export function resolveScope(url: string | URL, scope: IconScope): IconScope {
+  const options = getScopeOptions(url);
+  return options.includes(scope) ? scope : (options.at(-1) ?? 'host');
 }

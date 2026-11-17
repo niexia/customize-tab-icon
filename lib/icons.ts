@@ -2,15 +2,15 @@ import { storage } from 'wxt/utils/storage';
 import {
   createIconStorageKey,
   DOMAIN_SCOPE_MIGRATION_KEY,
-  getDomainIconStorageKey,
-  getDomainOriginalIconStorageKey,
-  getIconStorageKey,
-  getOriginalIconStorageKey,
+  getScopeIconStorageKey,
+  getScopeOriginalIconStorageKey,
   getSiteHost,
   getSiteHostFromHost,
+  ICON_SCOPES,
+  type IconScope,
+  type IconStorageKey,
   LEGACY_ICON_KEY,
   LEGACY_MIGRATION_KEY,
-  type IconStorageKey,
 } from './icon-key';
 import { log } from './utils';
 
@@ -113,17 +113,19 @@ export function migrateLegacyIcons(): Promise<void> {
   return migrationPromise;
 }
 
-export async function getPageIcon(url: string): Promise<string | null> {
-  const icon = await storage.getItem<string>(getIconStorageKey(url));
+/* ---------------------------------- CRUD ---------------------------------- */
+
+export async function getIcon(url: string, scope: IconScope): Promise<string | null> {
+  const icon = await storage.getItem<string>(getScopeIconStorageKey(url, scope));
   return icon ? icon : null;
 }
 
-export async function setPageIcon(url: string, icon: string): Promise<void> {
-  await storage.setItem(getIconStorageKey(url), icon);
+export async function setIcon(url: string, scope: IconScope, icon: string): Promise<void> {
+  await storage.setItem(getScopeIconStorageKey(url, scope), icon);
 }
 
-export async function removePageIcon(url: string): Promise<void> {
-  await storage.removeItem(getIconStorageKey(url));
+export async function removeIcon(url: string, scope: IconScope): Promise<void> {
+  await storage.removeItem(getScopeIconStorageKey(url, scope));
 }
 
 /**
@@ -131,105 +133,120 @@ export async function removePageIcon(url: string): Promise<void> {
  * without any `<link rel="icon">`, where we created the link ourselves and
  * Chrome would otherwise keep showing our icon after the link is removed.
  */
-export async function getOriginalIcon(url: string): Promise<string | null> {
-  const icon = await storage.getItem<string>(getOriginalIconStorageKey(url));
+export async function getOriginalIcon(url: string, scope: IconScope): Promise<string | null> {
+  const icon = await storage.getItem<string>(getScopeOriginalIconStorageKey(url, scope));
   return icon ? icon : null;
 }
 
-export async function setOriginalIcon(url: string, icon: string): Promise<void> {
-  await storage.setItem(getOriginalIconStorageKey(url), icon);
+export async function setOriginalIcon(url: string, scope: IconScope, icon: string): Promise<void> {
+  await storage.setItem(getScopeOriginalIconStorageKey(url, scope), icon);
 }
 
-/**
- * Remove every saved page icon, leaving the theme untouched.
- */
-export async function clearAllIcons(): Promise<void> {
-  const local = await storage.snapshot('local');
-  const keys: Array<`local:${string}`> = Object.keys(local)
-    .filter(
-      (key) =>
-        (key.startsWith('icon:') ||
-          key.startsWith('icon-domain:') ||
-          key.startsWith('icon-original:') ||
-          key.startsWith('icon-original-domain:')) &&
-        !key.endsWith('$'),
-    )
-    .map((key): `local:${string}` => `local:${key}`);
+/** Page icon wins over the host icon, which wins over the site icon. */
+export interface EffectiveIcon {
+  icon: string;
+  scope: IconScope;
+}
 
-  if (keys.length > 0) {
-    await storage.removeItems(keys);
+export async function getEffectiveIconWithScope(url: string): Promise<EffectiveIcon | null> {
+  for (const scope of ICON_SCOPES) {
+    const icon = await getIcon(url, scope);
+    if (icon) return { icon, scope };
   }
+
+  return null;
 }
 
-/**
- * Watch the icon of a single page. Returns an unsubscribe function.
- */
-export function watchPageIcon(url: string, callback: (icon: string | null) => void): () => void {
-  return storage.watch<string | null>(getIconStorageKey(url), (newValue) => {
-    callback(newValue ?? null);
-  });
-}
-
-export async function getDomainIcon(url: string): Promise<string | null> {
-  const icon = await storage.getItem<string>(getDomainIconStorageKey(url));
-  return icon ? icon : null;
-}
-
-export async function setDomainIcon(url: string, icon: string): Promise<void> {
-  await storage.setItem(getDomainIconStorageKey(url), icon);
-}
-
-export async function removeDomainIcon(url: string): Promise<void> {
-  await storage.removeItem(getDomainIconStorageKey(url));
-}
-
-export async function getDomainOriginalIcon(url: string): Promise<string | null> {
-  const icon = await storage.getItem<string>(getDomainOriginalIconStorageKey(url));
-  return icon ? icon : null;
-}
-
-export async function setDomainOriginalIcon(url: string, icon: string): Promise<void> {
-  await storage.setItem(getDomainOriginalIconStorageKey(url), icon);
-}
-
-/** Page-specific icon wins over a domain-wide icon. */
 export async function getEffectiveIcon(url: string): Promise<string | null> {
-  const pageIcon = await getPageIcon(url);
-  if (pageIcon) return pageIcon;
-  return getDomainIcon(url);
+  const effective = await getEffectiveIconWithScope(url);
+  return effective?.icon ?? null;
 }
 
 export async function getEffectiveOriginalIcon(url: string): Promise<string | null> {
-  const pageOriginal = await getOriginalIcon(url);
-  if (pageOriginal) return pageOriginal;
-  return getDomainOriginalIcon(url);
+  for (const scope of ICON_SCOPES) {
+    const icon = await getOriginalIcon(url, scope);
+    if (icon) return icon;
+  }
+
+  return null;
+}
+
+/* --------------------------------- Cleanup -------------------------------- */
+
+const PAGE_ICON_PREFIX = 'icon:';
+const PAGE_ORIGINAL_PREFIX = 'icon-original:';
+const HOST_ICON_PREFIX = 'icon-host:';
+const HOST_ORIGINAL_PREFIX = 'icon-original-host:';
+
+/** Host part of a page key such as `icon:news.example.com/docs`. */
+function pageKeyHost(key: string, prefix: string): string | null {
+  if (!key.startsWith(prefix)) return null;
+
+  const rest = key.slice(prefix.length);
+  const slash = rest.indexOf('/');
+  return slash === -1 ? null : rest.slice(0, slash);
+}
+
+function hostKeyHost(key: string): string | null {
+  if (key.startsWith(HOST_ICON_PREFIX)) return key.slice(HOST_ICON_PREFIX.length);
+  if (key.startsWith(HOST_ORIGINAL_PREFIX)) return key.slice(HOST_ORIGINAL_PREFIX.length);
+  return null;
 }
 
 /**
- * Remove page-specific icons (and their original-icon entries) for a host.
- * Used when the user explicitly applies an icon to the whole site.
+ * Remove icons at scopes narrower than `scope`, but only inside its range.
+ * Applying a wider icon has to clear the narrower choices that would otherwise
+ * keep shadowing it — e.g. a whole-site icon must replace page and host icons
+ * on every host of the domain, including the apex host entry.
  */
-export async function removePageIconsForSite(url: string): Promise<void> {
+export async function removeNarrowerIcons(url: string, scope: IconScope): Promise<void> {
+  if (scope === 'page') return;
+
+  const local = await storage.snapshot('local');
   const siteHost = getSiteHost(url);
-  const pagePrefix = 'icon:';
-  const originalPrefix = 'icon-original:';
+  const host = new URL(url).host;
 
-  const getKeyHost = (key: string, prefix: string): string | null => {
-    if (!key.startsWith(prefix)) return null;
+  const covers = (keyHost: string) =>
+    scope === 'host' ? keyHost === host : getSiteHostFromHost(keyHost) === siteHost;
 
-    const rest = key.slice(prefix.length);
-    const slash = rest.indexOf('/');
-    return slash === -1 ? null : rest.slice(0, slash);
-  };
+  const keys: Array<`local:${string}`> = [];
+
+  for (const key of Object.keys(local)) {
+    if (key.endsWith('$')) continue;
+
+    const hostOfPage = pageKeyHost(key, PAGE_ICON_PREFIX) ?? pageKeyHost(key, PAGE_ORIGINAL_PREFIX);
+    if (hostOfPage !== null) {
+      if (covers(hostOfPage)) keys.push(`local:${key}`);
+      continue;
+    }
+
+    if (scope === 'domain') {
+      const hostOfIcon = hostKeyHost(key);
+      if (hostOfIcon !== null && covers(hostOfIcon)) keys.push(`local:${key}`);
+    }
+  }
+
+  if (keys.length > 0) {
+    await storage.removeItems(keys);
+  }
+}
+
+/**
+ * Remove every saved icon, leaving the theme and other settings untouched.
+ */
+export async function clearAllIcons(): Promise<void> {
+  const prefixes = [
+    PAGE_ICON_PREFIX,
+    PAGE_ORIGINAL_PREFIX,
+    HOST_ICON_PREFIX,
+    HOST_ORIGINAL_PREFIX,
+    'icon-domain:',
+    'icon-original-domain:',
+  ];
 
   const local = await storage.snapshot('local');
   const keys: Array<`local:${string}`> = Object.keys(local)
-    .filter((key) => {
-      if (key.endsWith('$')) return false;
-
-      const host = getKeyHost(key, pagePrefix) ?? getKeyHost(key, originalPrefix);
-      return host !== null && getSiteHostFromHost(host) === siteHost;
-    })
+    .filter((key) => !key.endsWith('$') && prefixes.some((prefix) => key.startsWith(prefix)))
     .map((key): `local:${string}` => `local:${key}`);
 
   if (keys.length > 0) {
@@ -237,11 +254,15 @@ export async function removePageIconsForSite(url: string): Promise<void> {
   }
 }
 
-export function watchDomainIcon(
-  url: string,
-  callback: (icon: string | null) => void,
-): () => void {
-  return storage.watch<string | null>(getDomainIconStorageKey(url), (newValue) => {
-    callback(newValue ?? null);
-  });
+/* -------------------------------- Watchers -------------------------------- */
+
+/** Run `callback` whenever any scoped icon for this URL changes. */
+export function watchIconChanges(url: string, callback: () => void): () => void {
+  const unsubscribes = ICON_SCOPES.map((scope) =>
+    storage.watch<string | null>(getScopeIconStorageKey(url, scope), () => callback()),
+  );
+
+  return () => {
+    for (const unsubscribe of unsubscribes) unsubscribe();
+  };
 }

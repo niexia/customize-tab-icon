@@ -10,25 +10,17 @@ import { sendMessage } from '@/lib/messaging';
 import { useIconSettings } from '@/components/icon-settings-context';
 import {
   clearAllIcons,
-  getDomainIcon,
   getEffectiveIcon,
+  getEffectiveIconWithScope,
   getEffectiveOriginalIcon,
-  getPageIcon,
+  getIcon,
   migrateLegacyIcons,
-  removeDomainIcon,
-  removePageIcon,
-  removePageIconsForSite,
-  setDomainIcon,
-  setDomainOriginalIcon,
+  removeIcon,
+  removeNarrowerIcons,
+  setIcon as setStoredIcon,
   setOriginalIcon,
-  setPageIcon,
 } from '@/lib/icons';
-import {
-  getIconStorageKey,
-  getSiteHost,
-  isSupportedUrl,
-  type IconScope,
-} from '@/lib/icon-key';
+import { getScopeTarget, isSupportedUrl, resolveScope, type IconScope } from '@/lib/icon-key';
 import { log } from '@/lib/utils';
 
 /**
@@ -71,8 +63,7 @@ async function syncMatchingTabs(
   scope: IconScope,
 ): Promise<void> {
   try {
-    const siteHost = getSiteHost(targetUrl);
-    const targetKey = getIconStorageKey(targetUrl);
+    const target = getScopeTarget(targetUrl, scope);
     const tabs = await chrome.tabs.query({});
 
     const matchingTabs = tabs.filter((tab) => {
@@ -80,9 +71,7 @@ async function syncMatchingTabs(
         return false;
       }
 
-      return scope === 'domain'
-        ? getSiteHost(tab.url) === siteHost
-        : getIconStorageKey(tab.url) === targetKey;
+      return getScopeTarget(tab.url, scope) === target;
     });
 
     await Promise.all(
@@ -123,9 +112,13 @@ function App() {
   const [tab, setTab] = useState<chrome.tabs.Tab | null>(null);
   const [loading, setLoading] = useState(true);
   const [supported, setSupported] = useState(true);
-  const { scope } = useIconSettings();
+  const { scope: scopePreference } = useIconSettings();
   const [iconSource, setIconSource] = useState<IconScope | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // The saved preference may not fit the current page (e.g. "whole site" on
+  // localhost, where host and site scope are the same).
+  const scope = tab?.url ? resolveScope(tab.url, scopePreference) : scopePreference;
 
   useEffect(() => {
     let cancelled = false;
@@ -150,13 +143,11 @@ function App() {
           return;
         }
 
-        const pageIcon = await getPageIcon(activeTab.url);
-        const domainIcon = pageIcon ? null : await getDomainIcon(activeTab.url);
+        const effective = await getEffectiveIconWithScope(activeTab.url);
         if (cancelled) return;
 
-        const source = pageIcon ? 'page' : domainIcon ? 'domain' : null;
-        setIconSource(source);
-        setIcon(pageIcon ?? domainIcon ?? activeTab.favIconUrl ?? '');
+        setIconSource(effective?.scope ?? null);
+        setIcon(effective?.icon ?? activeTab.favIconUrl ?? '');
       } catch (loadError) {
         log('error', 'Failed to load the current tab', loadError);
         if (!cancelled) {
@@ -186,40 +177,27 @@ function App() {
         // Pages without an icon link need this to restore the tab icon on reset.
         const existingIcon = await getEffectiveIcon(tab.url);
         const existingOriginal = await getEffectiveOriginalIcon(tab.url).catch(() => null);
-        previousIcon =
-          scope === 'domain'
-            ? await getDomainIcon(tab.url).catch(() => null)
-            : await getPageIcon(tab.url).catch(() => null);
+        previousIcon = await getIcon(tab.url, scope).catch(() => null);
         const originalIcon =
           existingOriginal ??
           (!existingIcon && tab.favIconUrl && tab.favIconUrl !== value
             ? tab.favIconUrl
             : undefined);
 
-        if (scope === 'domain') {
-          if (originalIcon) {
-            await setDomainOriginalIcon(tab.url, originalIcon);
-          }
-
-          // Store the site icon first so other open tabs update immediately.
-          await setDomainIcon(tab.url, value);
-          await sendToTab(tab.id, () =>
-            sendMessage('setWebsiteIcon', { icon: value, originalIcon }, tab.id),
-          );
-
-          // "Whole site" means this icon replaces existing page overrides for
-          // the host. Do it after the active tab has been updated successfully.
-          await removePageIconsForSite(tab.url);
-        } else {
-          if (originalIcon) {
-            await setOriginalIcon(tab.url, originalIcon);
-          }
-
-          await setPageIcon(tab.url, value);
-          await sendToTab(tab.id, () =>
-            sendMessage('setWebsiteIcon', { icon: value, originalIcon }, tab.id),
-          );
+        if (originalIcon) {
+          await setOriginalIcon(tab.url, scope, originalIcon);
         }
+
+        // Store the icon first so other open tabs update immediately.
+        await setStoredIcon(tab.url, scope, value);
+        await sendToTab(tab.id, () =>
+          sendMessage('setWebsiteIcon', { icon: value, originalIcon }, tab.id),
+        );
+
+        // A broader scope replaces the narrower icons that would otherwise
+        // keep shadowing it. Do it after the active tab has been updated
+        // successfully, so a failed apply leaves the stored icons untouched.
+        await removeNarrowerIcons(tab.url, scope);
 
         await syncMatchingTabs(tab.id, tab.url, scope);
 
@@ -227,16 +205,10 @@ function App() {
         setIconSource(scope);
         setError(null);
       } catch (applyError) {
-        if (scope === 'domain') {
-          if (previousIcon) {
-            await setDomainIcon(tab.url, previousIcon).catch(() => undefined);
-          } else {
-            await removeDomainIcon(tab.url).catch(() => undefined);
-          }
-        } else if (previousIcon) {
-          await setPageIcon(tab.url, previousIcon).catch(() => undefined);
+        if (previousIcon) {
+          await setStoredIcon(tab.url, scope, previousIcon).catch(() => undefined);
         } else {
-          await removePageIcon(tab.url).catch(() => undefined);
+          await removeIcon(tab.url, scope).catch(() => undefined);
         }
         log('error', 'Failed to apply the icon', applyError);
         setError('Could not apply the icon to this page. Try refreshing it and retry.');
@@ -249,10 +221,9 @@ function App() {
     if (!tab?.id || !tab.url || !supported) return;
 
     try {
-      const pageIcon = await getPageIcon(tab.url).catch(() => null);
-      const domainIcon = pageIcon ? null : await getDomainIcon(tab.url).catch(() => null);
+      const effective = await getEffectiveIconWithScope(tab.url).catch(() => null);
 
-      if (!pageIcon && !domainIcon) {
+      if (!effective) {
         setIconSource(null);
         return;
       }
@@ -266,29 +237,25 @@ function App() {
         sendMessage('clearWebsiteIcon', originalIcon ?? undefined, tab.id),
       );
 
-      if (pageIcon) {
-        await removePageIcon(tab.url);
-      } else {
-        await removeDomainIcon(tab.url);
-      }
+      await removeIcon(tab.url, effective.scope);
 
-      // Removing a page override may reveal an icon for the whole site.
-      const fallbackIcon = pageIcon ? await getDomainIcon(tab.url).catch(() => null) : null;
+      // Removing an override may reveal an icon for a broader scope.
+      const fallback = await getEffectiveIconWithScope(tab.url).catch(() => null);
 
-      if (fallbackIcon) {
+      if (fallback) {
         await sendToTab(tab.id, () =>
           sendMessage(
             'setWebsiteIcon',
-            { icon: fallbackIcon, originalIcon: originalIcon ?? undefined },
+            { icon: fallback.icon, originalIcon: originalIcon ?? undefined },
             tab.id,
           ),
         );
       }
 
-      await syncMatchingTabs(tab.id, tab.url, pageIcon ? 'page' : 'domain');
+      await syncMatchingTabs(tab.id, tab.url, effective.scope);
 
-      setIcon(fallbackIcon ?? restoredIcon ?? originalIcon ?? tab.favIconUrl ?? '');
-      setIconSource(fallbackIcon ? 'domain' : null);
+      setIcon(fallback?.icon ?? restoredIcon ?? originalIcon ?? tab.favIconUrl ?? '');
+      setIconSource(fallback?.scope ?? null);
       setError(null);
     } catch (resetError) {
       log('error', 'Failed to reset the icon', resetError);
@@ -298,7 +265,9 @@ function App() {
 
   const clearAll = useCallback(async () => {
     try {
-      const originalIcon = tab?.url ? await getEffectiveOriginalIcon(tab.url).catch(() => null) : null;
+      const originalIcon = tab?.url
+        ? await getEffectiveOriginalIcon(tab.url).catch(() => null)
+        : null;
 
       await clearAllIcons();
 
@@ -331,11 +300,12 @@ function App() {
         icon={icon}
         loading={loading}
         source={iconSource}
+        url={tab?.url}
         hint={hint}
         onReset={resetIcon}
       />
       {supported ? <SettingIcon onIconChange={applyIcon} /> : null}
-      <SettingsPanel />
+      <SettingsPanel url={supported ? tab?.url : undefined} />
       {error ? (
         <p role="alert" className="px-4 pb-2 text-xs text-destructive">
           {error}

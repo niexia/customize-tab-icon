@@ -74,15 +74,18 @@ Release is a separate, opt-in workflow; see [Release](#release).
 4. **Storage keys are a contract.** Keys are shared by the popup and every
    content script. Adding, renaming, or changing the shape of a key requires a
    migration with an idempotent marker; never silently break existing icons.
-5. **Page icon beats site icon.** `getEffectiveIcon` must keep this order; reset
-   must reveal the site icon when one exists.
+5. **Narrower scope beats wider.** `getEffectiveIcon` must keep page > host >
+   site; reset removes only the effective scope and reveals the next broader
+   icon.
 6. **Restore, don't delete.** On pages without a `<link rel="icon">`, keep the
    `#changicon-favicon` link on reset and point it at the original URL. Removing
    it makes Chrome keep the custom image.
 7. **Site scope is the registrable domain**, not the exact host. The suffix list
-   in `lib/icon-key.ts` is deliberate; update tests with it. Whole-site
-   apply/reset must also push to already-open matching tabs; storage watchers
-   alone miss tabs loaded before install/update.
+   in `lib/icon-key.ts` is deliberate; update tests with it. Host scope keys on
+   the exact hostname (including the port). Applying a wider scope must remove
+   the narrower icons it would shadow, including a same-hostname host entry on
+   an apex domain. Wider apply/reset must also push to already-open matching
+   tabs; storage watchers alone miss tabs loaded before install/update.
 8. **Permissions are reviewed.** Do not add, remove, or widen a permission
    without an explicit request. Update `docs/architecture.md`,
    `store/README.md` permission answers, and `docs/privacy.md` in the same
@@ -162,9 +165,13 @@ Manual smoke test (load `.output/chrome-mv3` unpacked):
 3. Open a second path and a subdomain of the same site in separate tabs
    **before** applying a whole-site icon; apply on one tab; both update without
    reloading; Reset site restores both.
-4. Clear all; tabs with the current content script return to their own icons. A
+4. Apply a **This subdomain** icon on a subdomain: the sibling subdomain and the
+   apex keep their own icons, and Reset subdomain reveals the site icon when one
+   exists. On `localhost`/an IP the site option is hidden and the label reads
+   This server.
+5. Clear all; tabs with the current content script return to their own icons. A
    tab loaded before the extension update may need one reload.
-5. Check the popup and page consoles for errors; the extension should make no
+6. Check the popup and page consoles for errors; the extension should make no
    network requests.
 
 ## Release

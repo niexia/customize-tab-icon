@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   getDomainIconStorageKey,
   getDomainOriginalIconStorageKey,
+  getHostIconStorageKey,
   getIconStorageKey,
+  getScopeIconStorageKey,
+  getScopeOptions,
+  getScopeTarget,
   getSiteHost,
   getSiteHostFromHost,
   isSupportedUrl,
+  resolveScope,
 } from './icon-key';
 
 describe('isSupportedUrl', () => {
@@ -84,5 +89,63 @@ describe('getIconStorageKey', () => {
     expect(getDomainOriginalIconStorageKey('https://news.example.com/a')).toBe(
       'local:icon-original-domain:example.com',
     );
+  });
+});
+
+describe('host-scope keys', () => {
+  it('keys by host, including the port', () => {
+    expect(getHostIconStorageKey('https://news.example.com/a/b')).toBe(
+      'local:icon-host:news.example.com',
+    );
+    expect(getHostIconStorageKey('http://localhost:3000/a')).toBe('local:icon-host:localhost:3000');
+  });
+
+  it('keeps host and site keys apart on an apex domain', () => {
+    expect(getHostIconStorageKey('https://example.com/a')).toBe('local:icon-host:example.com');
+    expect(getDomainIconStorageKey('https://example.com/a')).toBe('local:icon-domain:example.com');
+  });
+
+  it('dispatches by scope', () => {
+    const url = 'https://news.example.com/docs';
+    expect(getScopeIconStorageKey(url, 'page')).toBe(getIconStorageKey(url));
+    expect(getScopeIconStorageKey(url, 'host')).toBe(getHostIconStorageKey(url));
+    expect(getScopeIconStorageKey(url, 'domain')).toBe(getDomainIconStorageKey(url));
+  });
+});
+
+describe('getScopeTarget', () => {
+  it('resolves each scope to the identifier it covers', () => {
+    const url = 'https://news.example.com:8443/docs?q=1#top';
+    expect(getScopeTarget(url, 'page')).toBe('news.example.com:8443/docs');
+    expect(getScopeTarget(url, 'host')).toBe('news.example.com:8443');
+    expect(getScopeTarget(url, 'domain')).toBe('example.com');
+  });
+});
+
+describe('getScopeOptions', () => {
+  it('offers all three scopes for regular domains', () => {
+    expect(getScopeOptions('https://news.example.com/docs')).toEqual(['page', 'host', 'domain']);
+  });
+
+  it('keeps host and site on an apex domain, because only site covers subdomains', () => {
+    expect(getScopeOptions('https://example.com/docs')).toEqual(['page', 'host', 'domain']);
+  });
+
+  it('collapses host and site for localhost and IP addresses', () => {
+    expect(getScopeOptions('http://localhost:3000/a')).toEqual(['page', 'host']);
+    expect(getScopeOptions('http://127.0.0.1:5000/a')).toEqual(['page', 'host']);
+    expect(getScopeOptions('http://[::1]:5000/a')).toEqual(['page', 'host']);
+  });
+});
+
+describe('resolveScope', () => {
+  it('keeps a valid preference', () => {
+    expect(resolveScope('https://news.example.com/a', 'domain')).toBe('domain');
+    expect(resolveScope('https://news.example.com/a', 'host')).toBe('host');
+  });
+
+  it('falls back to the host scope where site scope would be identical', () => {
+    expect(resolveScope('http://localhost:3000/a', 'domain')).toBe('host');
+    expect(resolveScope('http://127.0.0.1:5000/a', 'domain')).toBe('host');
   });
 });

@@ -4,8 +4,7 @@ import {
   getEffectiveIcon,
   getEffectiveOriginalIcon,
   migrateLegacyIcons,
-  watchDomainIcon,
-  watchPageIcon,
+  watchIconChanges,
 } from '@/lib/icons';
 import { log } from '@/lib/utils';
 
@@ -22,8 +21,7 @@ export default defineContentScript({
     pageWindow[INJECTED_FLAG] = true;
 
     let currentIcon: string | null = null;
-    let unwatchPageIcon: (() => void) | null = null;
-    let unwatchDomainIcon: (() => void) | null = null;
+    let unwatchIcons: (() => void) | null = null;
     let observer: MutationObserver | null = null;
 
     const applyCurrentIcon = async () => {
@@ -50,11 +48,10 @@ export default defineContentScript({
     };
 
     const watchCurrentPage = () => {
-      unwatchPageIcon?.();
-      unwatchDomainIcon?.();
+      unwatchIcons?.();
 
-      unwatchPageIcon = watchPageIcon(window.location.href, refreshFromStorage);
-      unwatchDomainIcon = watchDomainIcon(window.location.href, refreshFromStorage);
+      // Page, host, and site icons can each change the effective icon.
+      unwatchIcons = watchIconChanges(window.location.href, refreshFromStorage);
     };
 
     const applyIconForCurrentUrl = async () => {
@@ -112,10 +109,8 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       observer?.disconnect();
       observer = null;
-      unwatchPageIcon?.();
-      unwatchDomainIcon?.();
-      unwatchPageIcon = null;
-      unwatchDomainIcon = null;
+      unwatchIcons?.();
+      unwatchIcons = null;
     });
 
     void (async () => {
